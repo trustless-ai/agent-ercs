@@ -1,6 +1,6 @@
 # Agent ERCs
 
-Solidity interfaces and base implementations for the **trustless AI agent economy**. Part of the [Trustless AI](https://github.com/trustless-ai) ecosystem — owned by no one, open to everyone.
+Solidity interfaces and base implementations for the **trustless AI agent economy**. Part of the [trustless-ai](https://github.com/trustless-ai) ecosystem — owned by no one, open to everyone.
 
 This repository is the on-chain standard library for AI agents: interfaces you implement once to run across any conformant protocol, and base implementations you inherit to get production-ready behavior out of the box.
 
