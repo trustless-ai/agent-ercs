@@ -155,7 +155,7 @@ interface IReputationRegistry {
     event NewFeedback(
         uint256 indexed agentId,
         address indexed clientAddress,
-        uint64  indexed feedbackIndex,
+        uint64           feedbackIndex,
         int128  value,
         uint8   valueDecimals,
         string  indexed indexedTag1,
@@ -177,7 +177,7 @@ interface IReputationRegistry {
     event ResponseAppended(
         uint256 indexed agentId,
         address indexed clientAddress,
-        uint64  indexed feedbackIndex,
+        uint64           feedbackIndex,
         address responder,
         string  responseURI,
         bytes32 responseHash
