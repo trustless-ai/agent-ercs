@@ -24,7 +24,17 @@ test/
     └── <ERCXXXX>/
 ```
 
-No top-level `src/`, no flat file dump — every ERC lives in its own directory under a functional category. If you're adding a new ERC, pick the category that best describes the **link** it defends (identity, execution, provenance, verify, eligibility…) and create `contracts/<category>/<ERCXXXX>/`.
+No top-level `src/`, no flat file dump — every ERC lives in its own directory under a functional category. Pick the category that best describes the **link** your ERC defends:
+
+| Category | Link it defends | What it covers |
+|----------|-----------------|----------------|
+| `identity/` | the agent is who it claims to be | Agent registration, portable identifiers, reputation registries |
+| `execution/` | the task reached the agent it was meant for | Task dispatch, orchestration, FSM-driven workflow, evidence chains |
+| `verify/` | the verdict was committed, intact, by the claimed key | Cryptographic proof verification (zkML, opML, TEE, …) |
+| `provenance/` | the inputs/outputs are committed and intact | Input commitment, output anchoring, tamper-evident logs |
+| `eligibility/` | the actor was permitted to act | Permissions, stake-gating, access control |
+
+If your ERC doesn't fit an existing category — propose a new one in the PR. Categories emerge from the stack, not the other way around.
 
 ---
 
