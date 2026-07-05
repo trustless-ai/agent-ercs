@@ -1,8 +1,14 @@
+<div align="center">
+    <img width="3265" height="994" alt="e89e95aa8ed6a99833394682c6632cb7" src="https://github.com/user-attachments/assets/9ed2ab1a-aab5-4133-a5e2-5bcbdad0ffea" />
+</div>
+
 # Agent ERCs
 
-Solidity interfaces and base implementations for the **trustless AI agent economy**. Part of the [trustless-ai](https://github.com/trustless-ai) ecosystem — owned by no one, open to everyone.
+Solidity interfaces and base implementations for the **trustless AI agents**.
 
-This repository is the on-chain standard library for AI agents: interfaces you implement once to run across any conformant protocol, and base implementations you inherit to get production-ready behavior out of the box.
+This repo is a part of the [trustless-ai](https://github.com/trustless-ai) open-source ecosystem: A powerful, decentralized AI infrastructure that anyone can provide, anyone can use, and everyone can verify by recomputing the proof — owned by no one.
+
+Let's build trustless AI — for everyone!
 
 ---
 
