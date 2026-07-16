@@ -23,6 +23,7 @@ import {InterfaceName} from "@agent-ercs/contracts/<category>/<ERCXXXX>/FileName
 | ERC | Category | What it defines | Import path |
 |-----|----------|-----------------|-------------|
 | **ERC-8004** | `identity/` | Trustless agents — identity registration, reputation feedback, and validation requests | `identity/ERC8004/IIdentityRegistry.sol` |
+| **ERC-8263** | `anchor/` | Onchain proof layer for AI agents — write-side action anchoring via a single canonical `AnchorProof` event | `anchor/ERC8263/IOnChainProof.sol` |
 | **ERC-8274** | `verify/` | AI inference proof verification — three-layer decoupling of crypto proof, agent binding, and contract declaration | `verify/ERC8274/IAgentVerifier.sol` |
 | **ERC-8299** | `verify/` | WYRIWE — input provenance attestation for AI inference | `verify/ERC8299/IWyriweAttestation.sol` |
 | **ERC-8301** | `execution/` | AI agent execution — universal task dispatch, orchestration, and verifiable evidence chain | `execution/ERC8301/IAgentWorkflow.sol` |
