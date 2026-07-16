@@ -29,7 +29,9 @@ checkable by anyone holding the artifact.
 
 `ObservationCommitment` — https://github.com/damonzwicker/observation-commitment-protocol
 
-- Canonical deploy: `0x7186599d6Eb50905ecd34346e705E4C93871143b` (Ethereum mainnet)
+- **Canonical deploy (mainnet): `0x7186599d6Eb50905ecd34346e705E4C93871143b`** — verify commitments against this.
+- Testnet reference only: `0x0963Fd33DF80c94360F2DC22e5c09517AeE7ED5c` (Base Sepolia). Do **not** verify a
+  mainnet commitment against Sepolia logs — a commitment is only valid on the chain it was recorded on.
 - Off-chain verifier: `ocp-verify@2.0.0` (npm) — 21-vector conformance suite
 - ERC-165 interface id `0xb5c645bd` (implemented by the contract, not the interface)
 - Extensions (separate contracts, **not** part of this base interface): Revocation,
