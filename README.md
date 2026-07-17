@@ -27,6 +27,7 @@ import {InterfaceName} from "@agent-ercs/contracts/<category>/<ERCXXXX>/FileName
 | **ERC-8274** | `verify/` | AI inference proof verification — three-layer decoupling of crypto proof, agent binding, and contract declaration | `verify/ERC8274/IAgentVerifier.sol` |
 | **ERC-8299** | `verify/` | WYRIWE — input provenance attestation for AI inference | `verify/ERC8299/IWyriweAttestation.sol` |
 | **ERC-8301** | `execution/` | AI agent execution — universal task dispatch, orchestration, and verifiable evidence chain | `execution/ERC8301/IAgentWorkflow.sol` |
+| **ERC-8312** | `metering/` | Bounded agent actions — envelope registration and aggregate consumption metering against an accepted bound | `metering/ERC8312/IBoundedAgentAction.sol` |
 
 ---
 
