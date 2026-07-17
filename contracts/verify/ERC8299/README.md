@@ -2,7 +2,7 @@
 
 - **Spec**: [ERC-8299 (ethereum/ERCs PR #1810)](https://github.com/ethereum/ERCs/pull/1810)
 - **Status**: Draft
-- **Authors**: TMerlini, Damonzwicker, JimmyShi22, babyblueviper1
+- **Authors**: TMerlini, TruthAnchor-AI, Damonzwicker, JimmyShi22, babyblueviper1
 
 ## Interfaces
 
