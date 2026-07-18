@@ -20,17 +20,17 @@ Import path pattern:
 import {InterfaceName} from "@agent-ercs/contracts/<category>/<ERCXXXX>/FileName.sol";
 ```
 
-| ERC | Category | What it defines | Import path |
-|-----|----------|-----------------|-------------|
-| **ERC-8004** | `identity/` | Trustless agents — identity registration, reputation feedback, and validation requests | `identity/ERC8004/IIdentityRegistry.sol` |
-| **ERC-8263** | `anchor/` | Onchain proof layer for AI agents — write-side action anchoring via a single canonical `AnchorProof` event | `anchor/ERC8263/IOnChainProof.sol` |
-| **ERC-8274** | `verify/` | AI inference proof verification — three-layer decoupling of crypto proof, agent binding, and contract declaration | `verify/ERC8274/IAgentVerifier.sol` |
-| **ERC-8275** | `reputation/` | Agent service discovery and escrow payments — event-derived reputation from settlement events and verified attestation history | `reputation/ERC8275/IAgentReputation.sol` |
-| **ERC-8281** | `verify/` | Observation Commitment Protocol (OCP) — on-chain commitment anchor for observation extraction and re-check digests | `verify/ERC8281/IObservationCommitment.sol` |
-| **ERC-8299** | `verify/` | WYRIWE — input provenance attestation for AI inference | `verify/ERC8299/IWyriweAttestation.sol` |
-| **ERC-8301** | `execution/` | AI agent execution — universal task dispatch, orchestration, and verifiable evidence chain | `execution/ERC8301/IAgentWorkflow.sol` |
-| **ERC-8312** | `metering/` | Bounded agent actions — envelope registration and aggregate consumption metering against an accepted bound | `metering/ERC8312/IBoundedAgentAction.sol` |
-| **ERC-8323** | `identity/` | Source-token agent binding for ERC-8004 — links external NFT ownership to agent identity via on-chain provenance | `identity/ERC8323/IAgentSourceBinding.sol` |
+| ERC | Name | Category | What it defines |
+|-----|------|----------|-----------------|
+| **ERC-8004** | Trustless Agents | `identity/` | Identity registration, reputation feedback, and validation requests for human and machine actors |
+| **ERC-8263** | Onchain Proof Layer for AI Agents | `anchor/` | Write-side action anchoring via a single canonical `AnchorProof` event — immutable timeline of agent activity |
+| **ERC-8274** | AI Inference Proof Verification | `verify/` | Three-layer decoupling: cryptographic proof verification, agent authorization, and verifier declaration |
+| **ERC-8275** | Agent Service Discovery and Escrow Payments | `reputation/` | Event-derived agent reputation from escrow settlement events and verified attestation history |
+| **ERC-8281** | Observation Commitment Protocol (OCP) | `verify/` | On-chain commitment anchor — observation extraction and re-check digests, the log is the ledger |
+| **ERC-8299** | WYRIWE — Input Provenance for AI Inference | `verify/` | Triple-hash input provenance: binds raw user input to what the model actually received |
+| **ERC-8301** | AI Agent Execution | `execution/` | Universal task dispatch, FSM orchestration, and verifiable step-execution evidence chain |
+| **ERC-8312** | Bounded Agent Actions | `metering/` | Envelope registration and aggregate consumption metering against an accepted bound — the cursor holds the sum |
+| **ERC-8323** | Source-Token Agent Binding | `identity/` | Links external NFT ownership to ERC-8004 agent identity via on-chain provenance |
 
 > **Base implementation:** `ConsultEscrow` (`settlement/ConsultEscrow/ConsultEscrow.sol`) — trustless pay-on-delivery for agent consultations. No standalone ERC number (see its [README](contracts/settlement/ConsultEscrow/README.md) for the spec anchor).
 
