@@ -63,7 +63,7 @@ attestationCountEffective = 1 / sum(s**2 for s in shares.values())
 
 ## Files
 
-- `attester-diversity-v0.vectors.json` — 5 pinned vectors (fixed seed 8275 for synthetic key
+- `attester-diversity-v0.vectors.json` — 6 pinned vectors (fixed seed 8275 for synthetic key
   material only — the scored quantity is deterministic and carries no randomness).
 - `generate_vectors.py` — reproduces the vectors byte-for-byte from the pinned block structure.
 - `gate.ts` — the checker (`bun gate.ts` self-checks against pinned `expected`; `--tamper` runs

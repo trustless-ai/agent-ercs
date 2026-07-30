@@ -229,91 +229,162 @@
       }
     },
     {
+      "name": "invalid-signatures-excluded",
+      "note": "Merlini's review catch (2026-07-30 PR review, agent-ercs#10): every prior vector was all-sigValid=true, so the signature-gate EXCLUSION rule was never actually pinned by a case. Here, 3 real operators each contribute 2 valid attestations (6 total, N_eff=3 -- same shape as the even-split vector above), PLUS 4 more attestation attempts with sigValid=false attached to a 4th operator. The invalid ones are present in the raw log (a real attempt happened) but MUST be excluded entirely from both attestationCountRaw (stays 6, not 10) and attestationCountEffective (stays 3.0, the 4th operator contributes zero share) -- confirming the pre-existing signature-gate rule and the new diversity weighting compose correctly rather than one silently overriding the other.",
+      "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
+      "log": [
+        {
+          "eventId": "0x8df5c4e2e9ce17ddfc577e19b205b4e5640c59d0d68d301c88702ff43d159ce8",
+          "attesterKey": "0xff971017538043065ff88d18867fa704d25e85b01a18f7867e37a104dbadfbee",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xab8535ae17f99d2d7891b7896643bd0e679fca75788c6c1baf9351dc24a1e26b",
+          "attesterKey": "0xda3c351d5f5173c4ec87db801d370c94939ea20c9142a8bb2d9fbece013bceb6",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x335b1a8a99987cd1fde02bd4ed5ef84700f8c2f333dd3735809f0b56cf584650",
+          "attesterKey": "0x33be1030178a77e4950dbe16e9834f6cbd74bd8416e9eaeaa52d2244eb2fcd3e",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xf0a3d3e6c274f70f03cabb3857630530f6a1c0995c567048982c1f9659cde815",
+          "attesterKey": "0xe3b96f5581d50ecb627e6406d807cdd1be2838d215936df9aec402c2bb06893d",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x20f15e1fba6e43571bfcfef9879fcbc51b652968d25025a671301b1936499964",
+          "attesterKey": "0x3ddf11fb4abdce9cec3912dc02c64ea5f43ce34951c90d4f0c419c38bf0399b1",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x7520ba4136ace51b6ac0e2efcaafd6c374733ce85f9bf8901972b243673e8e5e",
+          "attesterKey": "0x9db7381ea549a21e0e3368dd2d6bfdd7b896bf390ee605613dfffed98caf748d",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x198c2c8418e91affbe44ba89d5dc08a019ef55eef8f2b579d8529683b49d68b2",
+          "attesterKey": "0xfaf5ecb0147b7bfc9654570f7581fa7a8b241ba9a9e4ffe6bac0961ac3f3e7e5",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        },
+        {
+          "eventId": "0xb40d3fad7b24d13a178d938b2fd3ce654f84123c57ff07c1cda2dc8d2800bbd4",
+          "attesterKey": "0x51aaa3fbff96cd6ed04012969b8ca134d560397d4777249a0be76afd387b0e32",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        },
+        {
+          "eventId": "0xd464db72fb5dcadda20bacf37cb67d3da2f6baad6e4a537b8d8a5fbeb4850ce6",
+          "attesterKey": "0xcc317fab02dd0944580fe63546680873a16d67d49dbbf7b8bc043fa235ce5ef1",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        },
+        {
+          "eventId": "0xf7b49853d4cb0adeaa925e1be0bd6a0995fc77f1fb1ed21f96c5b44f64767d67",
+          "attesterKey": "0xef411132edf036e245d0d19f93730a7bacf1446230fff79055ca67233b7d1ae6",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        }
+      ],
+      "expected": {
+        "attestationCountRaw": 6,
+        "attestationCountEffective": 3.0
+      }
+    },
+    {
       "name": "five-operators-one-outlier",
       "note": "5 operators total: one large Sybil-suspect cluster (10 attestations from operator-A, structurally identical to the counterexample above) alongside 4 genuinely independent single-attestation operators. N_eff correctly stays low (dominated by the 10-share block) rather than being pulled toward 5 by the presence of minor independent voices.",
       "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
       "log": [
         {
-          "eventId": "0xc3d42e6b65c747a8b9250926743b2c1bee5a4bdf830ac2c3b2d740e9d88d5bb3",
-          "attesterKey": "0x60e9c2caa1d0f0a48f9a51c26069242d4c75b9156b8491f005598ac7a08f74b7",
+          "eventId": "0x58be8dfee7e411497bf599e05bdaf68c8b74e0180e6d693a3b6a1f093edcd145",
+          "attesterKey": "0xf3b660ddecf242b237ce2eb4d2a105bca5319232cf3cac5f2585ea4a11dc522d",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x8a92f92b85f6fdc7749a41f1695bc7289d552c62d3a3d6f608cf05e551de0c23",
-          "attesterKey": "0xffddab32ca990a76e962d406345c316e4376e2c44a7b6b7cc23c31f51f6efef1",
+          "eventId": "0x30cb2a3020a33061322c42af5e37cbb6d0fe575172011615911ccbf8827456f6",
+          "attesterKey": "0x83c0258dfcbdd1dacc6643a44f2d5f824c3c7cdeb592ddef306a13a90940c2c9",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x0681d30c1cfa74ac7f58232df72a5f6583d8a7c942fbe98543bc984977b5ea71",
-          "attesterKey": "0xc4d02f667fdf9cb0506503920c7a57518cb0a0238b783810f63080c190478334",
+          "eventId": "0x09bd1ffcb54f5a1211fdf223d144b8fbfa28c8cfd65796825d300b2332956351",
+          "attesterKey": "0xaebe9c4ea4dd0847d00edde6dfc8a0095000be2e025382db830a689da10790cf",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x5c543d09607d06c57bac8df9fbf135a957573c25fc4a2d5fe51b38bef8c64bd4",
-          "attesterKey": "0xb5c2cec33e9454802ad8ce7988a4b6c2538cde7eb9445464ed1adb6ffccf5553",
+          "eventId": "0x61343a85effdfe8872733705e35a86c0434f32809d30d2d2d87c62f76e7cd3d9",
+          "attesterKey": "0x81ecd89320c30167d1cab04cd690ced8803f93745a34ead25181bb5a2a127407",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x5e17a728bd52ed3c3fec9fb4b7670a6d2a2d1dc6df1de4da2cd811edf75b5c8e",
-          "attesterKey": "0xf2be03b828f678fbd95d298bae3cac3b4d1dc25790e5485ebc258a3dc2b0ca75",
+          "eventId": "0xc2286d26b1956085de6633ca7295baec6092d93910ec12efe343d2ef77828c13",
+          "attesterKey": "0x25828aa25fc86cc8125ce4d60026179c36a1a97573a98af3d951a0bf0caee13e",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x2032f24efe9eb81b92784ee43416fbb4df36d9d6be52cf110ee0b40fbe946a7b",
-          "attesterKey": "0x2e1f0798dc30a6952b02de32c521d22ceb398a7ffdb6de0fd71561285bec6224",
+          "eventId": "0x369afafd4624868b00d72f34beb699f96b484ff73cd48c8a170a11edf724f133",
+          "attesterKey": "0xe47a72285214276b5f0b86cdadbcc9f7c703c8a7c373ac434e8aa5418022142d",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x72c00bc449e76add30d37cc3e860970523387c3a97f76c443ab787402d21d6d9",
-          "attesterKey": "0x86cc03349095c682d907ddb261de2a4b17973c885857112fa7cac5d9d8eea0ed",
+          "eventId": "0xe373be3b672dff69f484df5e8388a7b743221f436f936eeaab6fb8f7e2ab91f9",
+          "attesterKey": "0xae3b38e67f1495a60ec97db6f3f331d861d2adfe76700f3286d432a9cb6e1c7b",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x8411394be533256dea873740de0e23e75409b41a313ebb879c1b07d15edd7122",
-          "attesterKey": "0xf047a01297921878b0a830f174ef84171ce098c89c90ea66c6f3aafe61e7ddf3",
+          "eventId": "0xabfacb4f72672fda9dc50de32a5b52b05eec4583dcd613fa271c7c5327c2f1fb",
+          "attesterKey": "0x26952edc6607a57d8d131a0393ba109027df4c384ac013c23138e81ad284539a",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x8159a0553ee1fb08edd2054056e987b8bdebaefe49fc568704c4949adfd17793",
-          "attesterKey": "0x006a4f0db8bf6c2edbd234550cc9a62d269bd93501031f699c88ea9e3ad8a7f7",
+          "eventId": "0xa92e79483d73a36323bc17b46651d1ba822ebe6d7482055a0d4b297282d3b9cd",
+          "attesterKey": "0xcc91f6f06f2cc1c29d2fffa79b22099f8caa49e1135543e1931d93c15aee841e",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0xeda544dc285d57adff2d61683bb8c65beb610140e463c7fc63d97da6f00c6f21",
-          "attesterKey": "0x99c2ea82c69acda1f75ba84fedc44ae7e0456e5708ce5a6b017e0791103c5356",
+          "eventId": "0x1dc31c7e27f3a9b1d0cdd6237bb2807a0165233465c29f1e0477c1ffa4f9db28",
+          "attesterKey": "0xf71db9b58e08f8a337fd93d1ab47fe3a8cc1aafd6d52c64323cbde2944bc2605",
           "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
           "sigValid": true
         },
         {
-          "eventId": "0x86d3268fb9d227397d209a17e0d7f638d332a69583813cdcf439d17eafadd7dd",
-          "attesterKey": "0xd29b138c157b706fff9586055dfc5a62a895ae3c1cc4954f4a9f8b68d72cf8b0",
+          "eventId": "0x893fdaebc261cffbd94dfd8082d06644aa875a4a2cfcb9bc1ddf368c1ff33952",
+          "attesterKey": "0x6a61022d3468d074552a75d419de0ab2b6191366b08216903e95a4b2ba595731",
           "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
           "sigValid": true
         },
         {
-          "eventId": "0xdbb0e3223e93cc91954ae469a40d3993acd51a16bff04e6061568877bb917d53",
-          "attesterKey": "0x31a16e8706ce5b61d0b4f08e4f8d6fcec971148484ddc0ee80d68b9885cdb076",
+          "eventId": "0xad13a4b93e33a6249490413edd57394f27087f39f47a61db6788467e7c5588eb",
+          "attesterKey": "0xa1ba19a5541683c1560f54db7274d89892fa732fb779fc02488836299e6bec34",
           "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
           "sigValid": true
         },
         {
-          "eventId": "0x9532b5d38da836292aee73c478dee1d0ab7f67dda19ff38654f65f8fab13ff32",
-          "attesterKey": "0x6e69fc0e6432fad190e09b22a9def6d2bef3ef13953f996310531bea044e4c67",
+          "eventId": "0xfd4c179669de652ec383a8e122d755d47715a437b39d65d50953cd18ad06a5eb",
+          "attesterKey": "0x4fe7353a045440620f5a98eb655df39aa36df16b18d7cd7beb39b036c2bfd862",
           "trueOperator": "0xce5b3aa43d6891f25a28d5ae0bf7d05f3e2bc691",
           "sigValid": true
         },
         {
-          "eventId": "0xe42e0b414a46eacd57106188f9e6181516804fd87af64ca9e60f788037cff95c",
-          "attesterKey": "0xfd5b7e0c9d4e360b1bc23ea1a0cd365f8130fff86605a633ad77ca7de736818c",
+          "eventId": "0xb1a3fb68913ad3d9a9748ae6891c0acacd0cad6514a3092e357ddfa31f4b56a6",
+          "attesterKey": "0x45eba5e59953ff5022fb643aee62028197368d21d3b3cb271490c083490a0a87",
           "trueOperator": "0xc52c02d53f6206d734d9f360c620419f5a566e0b",
           "sigValid": true
         }

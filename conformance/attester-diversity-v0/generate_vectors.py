@@ -26,10 +26,15 @@ def fake_key(label: str) -> str:
     return "0x" + hashlib.sha256(label.encode() + salt).hexdigest()
 
 
-def build_block_vector(name, note, blocks, agent_id):
+def build_block_vector(name, note, blocks, agent_id, invalid_blocks=None):
     """blocks: list of (operator_label, attestation_count). Each attestation gets its own
     distinct signing key (so naive attestationCount always equals the raw total), but keys
-    within a block share `trueOperator` (what an ERC-8294 operator-diversity claim would report)."""
+    within a block share `trueOperator` (what an ERC-8294 operator-diversity claim would report).
+
+    invalid_blocks (optional): list of (operator_label, count) entries with sigValid=False --
+    present in the log (a real attestation attempt was made) but MUST be excluded from both
+    attestationCountRaw and attestationCountEffective, per the existing signature-gating rule
+    (unchanged, unrelated to diversity-weighting -- this just confirms the two rules compose)."""
     log = []
     for op_label, count in blocks:
         operator_id = "0x" + hashlib.sha256(f"operator:{op_label}".encode()).hexdigest()[:40]
@@ -40,7 +45,16 @@ def build_block_vector(name, note, blocks, agent_id):
                 "trueOperator": operator_id,
                 "sigValid": True,
             })
-    total = len(log)
+    for op_label, count in (invalid_blocks or []):
+        operator_id = "0x" + hashlib.sha256(f"operator:{op_label}".encode()).hexdigest()[:40]
+        for i in range(count):
+            log.append({
+                "eventId": fake_key(f"{name}:{op_label}:invalid:{i}"),
+                "attesterKey": fake_key(f"{name}:{op_label}:invalid:{i}:key"),
+                "trueOperator": operator_id,
+                "sigValid": False,
+            })
+    total = sum(c for _, c in blocks)  # sigValid=True entries only -- invalid ones never counted
     shares = {}
     for op_label, count in blocks:
         operator_id = "0x" + hashlib.sha256(f"operator:{op_label}".encode()).hexdigest()[:40]
@@ -94,6 +108,21 @@ vectors = [
         "share of 1.0.",
         [("operator-A", 1)],
         AGENT,
+    ),
+    build_block_vector(
+        "invalid-signatures-excluded",
+        "Merlini's review catch (2026-07-30 PR review, agent-ercs#10): every prior vector was "
+        "all-sigValid=true, so the signature-gate EXCLUSION rule was never actually pinned by a "
+        "case. Here, 3 real operators each contribute 2 valid attestations (6 total, N_eff=3 -- "
+        "same shape as the even-split vector above), PLUS 4 more attestation attempts with "
+        "sigValid=false attached to a 4th operator. The invalid ones are present in the raw log "
+        "(a real attempt happened) but MUST be excluded entirely from both attestationCountRaw "
+        "(stays 6, not 10) and attestationCountEffective (stays 3.0, the 4th operator contributes "
+        "zero share) -- confirming the pre-existing signature-gate rule and the new diversity "
+        "weighting compose correctly rather than one silently overriding the other.",
+        [("operator-A", 2), ("operator-B", 2), ("operator-C", 2)],
+        AGENT,
+        invalid_blocks=[("operator-D-unsigned", 4)],
     ),
     build_block_vector(
         "five-operators-one-outlier",
