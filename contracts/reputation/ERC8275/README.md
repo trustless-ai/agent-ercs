@@ -39,6 +39,29 @@ against the published `verifier_pubkey`, read win/loss off the public settled ac
 `committed_at` predates the outcome via the ERC-8263 anchor — no step trusts the issuer's own
 say-so. Full per-field mapping + recompute path: spec Appendix A.3.
 
+## Attester-diversity weighting (Sybil resistance, closes a real spec gap)
+
+Signature-gating `attestationCount` stops the *attested* party from self-inflating it, but a
+second, structurally identical gap stayed open until now: nothing stopped N distinct,
+validly-signed attestations from tracing back to M << N actual attester-*operators* (a Sybil
+ring of verifiers, not of the attested address) — raised by Dipankar Sarkar
+(@sarkardipankar), design converged with Merlini and babyblueviper1 over a 28-round public
+exchange (`ethereum/ERCs#1774`, issuecomment-5013819926 / -5017235227).
+
+Fix: weight `attestationCount` by attester-operator independence, sourced the same way
+`counterpartyDiversity` already sources its own diversity (a composing ERC-8294 network's
+operator-diversity claims) — `attestationCountEffective = 1 / Σ(share_i²)`, the standard
+inverse-Simpson / inverse-HHI effective-number-of-independent-players formula. Collapses to 1
+when every attestation traces to one operator regardless of raw count; equals K when evenly
+spread across K independent operators.
+
+Real, runnable conformance suite: [`conformance/attester-diversity-v0/`](../../../conformance/attester-diversity-v0)
+— 5 pinned vectors (including the Sybil-ring counterexample), `bun gate.ts` self-checks against
+them, `--tamper` runs the naive raw-count method to show exactly where it diverges. The harder
+adversarial-inference half of this problem (can an implementation *infer* operator identity from
+raw attestation timing/overlap when labels are withheld) is intentionally left open — Sarkar's
+own follow-on point, left for him to land in his own words rather than built on his behalf.
+
 ## Related ERCs
 
 - [ERC-8299](../../verify/ERC8299) — WYRIWE attestation fields this reputation layer optionally

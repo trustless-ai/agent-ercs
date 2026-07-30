@@ -1,0 +1,7 @@
+{
+  "profile": "attester_diversity.v0",
+  "vectors": { "path": "attester-diversity-v0.vectors.json", "sha256": "0d84c2d15c0e37f53fbfa64d3ac28c8fc8fc89f5dc1f6d42333883b385aa1375" },
+  "adapter": { "kind": "stdio", "cmd": "bun gate.ts --grade" },
+  "laneHint": "recomputable",
+  "spec": { "path": "attester-diversity-v0.spec.md", "sha256": "b63d2255d50920ef5be19416b893db5acd7afa2b62514e6ae02d3165fa1e40c0" }
+}
