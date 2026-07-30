@@ -1,0 +1,398 @@
+{
+  "profile": "attester_diversity.v0",
+  "seed": 8275,
+  "description": "Diversity-weighted attestationCount for ERC-8275's reputation axis (f(attestationCount, counterpartyDiversity, winRate, volumeCap)), closing the gap Dipankar Sarkar raised: signature-gating alone stops the ATTESTED party from self-inflating attestationCount, but does nothing to stop N distinct, validly-signed attestations tracing back to M << N actual attester-operators -- a Sybil ring of VERIFIERS, not of the attested address. attestationCount_effective replaces (or accompanies) the raw signature-valid count: given share_i = operator i's fraction of an agent's total attestation weight (sourced from a composing ERC-8294 network's operator-diversity claims, the same source counterpartyDiversity already consumes), attestationCount_effective = 1 / sum(share_i^2) -- the standard inverse-Simpson / inverse-HHI effective-number-of-players formula. Collapses to 1 when every attestation traces to one operator regardless of raw count; equals K when evenly spread across K independent operators. Where no composing 8294 network exists (a single-issuer reference feed), attestationCount_effective trivially equals 1 -- an honest, conservative floor, not a special case requiring separate logic.",
+  "recompute": "shares = {op: sum(1 for e in log if e.trueOperator == op and e.sigValid) / sum(1 for e in log if e.sigValid) for op in distinct_operators(log)} ; attestationCountEffective = 1 / sum(s**2 for s in shares.values())",
+  "vectors": [
+    {
+      "name": "single-operator-sybil-ring",
+      "note": "THE COUNTEREXAMPLE. 5 distinct signing keys, 5 distinct valid signatures -- today's spec would report attestationCount=5. All 5 keys trace to ONE true operator (a Sybil ring of verifiers, not of the attested agent). Diversity-weighted count collapses to N_eff=1, the honest answer: one independent judgment, wearing five keys.",
+      "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
+      "log": [
+        {
+          "eventId": "0xf4eb2561d7962e369cdc5ffe8aa2a8584b914fa3041e76b0cc1e76886caa7488",
+          "attesterKey": "0x9821c176a86d0a257970c4b44f5bf720795a2fc412f20953253b72b1d426156f",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x00edbaee936ba2d8df764170584559f88d0b620b26c3b46915dd4250ac650fc7",
+          "attesterKey": "0xb8bc99cec0974c99431aa2e93e76ce89541bd5691ae77f5bb27d1ff4d3ce539c",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xf7cf27da7f28de0f08ee852078f036a89f6712bbfa318104de7cd84b22c69e75",
+          "attesterKey": "0xfbc0007f389548d5169998ec4d78df1115ad4d6741492d5b33d3e3a2992ca960",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x998f71bafc6852bfa686b3f447ccc335a127aabee1689443271ff464c4ff82d5",
+          "attesterKey": "0x1765f6b2c5c0f49cfddbd3f9d0cf502872a66e07fe09cc45051feffe2d21a22b",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x5bd09bd123389ef1b395d88ee664d96bd01c674d7f45993424cc394a9f44916e",
+          "attesterKey": "0x6d79ed5f6ea93330f7a9c4138304487db810dfc8d914f4db17ff24dc198f9755",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        }
+      ],
+      "expected": {
+        "attestationCountRaw": 5,
+        "attestationCountEffective": 1.0
+      }
+    },
+    {
+      "name": "three-independent-operators-even",
+      "note": "3 genuinely distinct operators, 4 attestations each (12 total, evenly spread). N_eff = K = 3 -- diversity-weighted count matches the raw operator count exactly when attestation weight is evenly distributed across independent attesters.",
+      "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
+      "log": [
+        {
+          "eventId": "0x1c65ff205f2e98a5d9a601fcdfd8f9276012a29f2dd4bc098255115122bf9535",
+          "attesterKey": "0xc81f82f4765409cedd22f2f2484aa95c84e7949f52d487af7d2d617bcb520520",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xbc43d98a97d4320e425821797ba7ad4ad53e3b7a51f3898b3519d172d9f1d1b7",
+          "attesterKey": "0xbf7e44b80ad91883b29b12ca4950b47dad817519b724afd2b13c404695bcf447",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x8299284b2182d27734f39ca4b64e97e6433af03199d20766b5caa13bab57c630",
+          "attesterKey": "0x220f8d2ed980649c9fc6bf6c04548c52fa50c53d6080c9ac22081454d9738fb7",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x8354a35b0b93ab4b56f769f7ba93a60c93a77be20c6b74ac4e8f7ff5199909eb",
+          "attesterKey": "0x7df3796b9a90c0ad0c059f97364d56a0754c6c380de75036bab88f26c9e22485",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x1de11684634d2ace92d19b48e35c787d5aa48520d93266c4c40c2000e3c5306e",
+          "attesterKey": "0x7e2da36cfa4693d23738a3cb52dda8d6721395392c0af1a4ac1de04e7731d7d9",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xa3d5433d23bf48af3bb238ce15d378a518ec62e0cfd57cdef1d0b3d1283afc15",
+          "attesterKey": "0xd9ba7bd336bf55274254d35911b794163a03feebcb6991ff0b8cb1613049c6d7",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x744dafc407fca0b66d58ad2edd6ab555c91a6e81caa284141e27cc1ff6bc8ae1",
+          "attesterKey": "0x6326a760e11aa3345465bcdd9e27f1b6a9890fa122924022537ef048df0b6d01",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xb223728cc44efd4235cdf5217fc60e6fce0799df701b3b50037655eb625d84d5",
+          "attesterKey": "0x9f1a17e98154b94edfb7707272a933f1c92091ec473cc4878d9cf2ab4aaa1017",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x9b8ebb2402396cfca73f2b7ba4a32332cd788414982bcd0b0456978868fd3e51",
+          "attesterKey": "0x50e691385ff162f93e7457c0a02eb4cdef508fc1ea483e28dcdb898ff976dc9e",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x0bcc1011af8c4aa70cb4edfdb538b21dd1fdf4c5c87f5d0cee97f7682a0f03b7",
+          "attesterKey": "0x543b3e9fdbfa4ea495dc96081314de45f551228e821350a3ec616089d243d6c0",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xa037a2bacdde86117ff885419c0802fe627c7c5436f62182a375c7c4fc4d8b8e",
+          "attesterKey": "0x94de09750209fa4e50d8cc9f6e9f9a72d5b5b22d355e6f7498f8743e7e7da2e8",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x4b5d49a1a01966193f1e1c496448f5c3941226925a035a8d029d44dbe88ac4ad",
+          "attesterKey": "0xed87ad71647500f5d4bac8124de18365e93ae847cc1e461eeace81bc96adebf7",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        }
+      ],
+      "expected": {
+        "attestationCountRaw": 12,
+        "attestationCountEffective": 3.0
+      }
+    },
+    {
+      "name": "skewed-diversity",
+      "note": "One dominant operator (8 of 12 attestations) plus two minor independent ones (2 each). Real, partial diversity: N_eff sits between the single-Sybil floor (1) and the fully-even ceiling (3), correctly reflecting that most weight still traces to one source even though 3 distinct operators are technically represented.",
+      "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
+      "log": [
+        {
+          "eventId": "0x542b1271308458f19775169604942d3e14b9f4c4b0e7283a98f98dcbe931813a",
+          "attesterKey": "0x0d77a3f2a49cd47aaaf67d5cd7e8dc7e8fb4d9691596a4ef4113281665e45c7c",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xa80eff1fa940c66b600772c20ed3c15370d8e3f66d8e82ea9149d690b5d10c46",
+          "attesterKey": "0x9e398e1ff27fbe16075fe735bcc6f9d011ada4326d3f294bea0e9faad61729eb",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x5727e23d72f24eedced3784d104108c8a59971a1ba9cc966d6bf457f06bde81c",
+          "attesterKey": "0x5804df8a4e5e4de742faa17d4dcc66ab21d7fc9e9ce599f9ad38b862f6481124",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xb3143a6f4e241a59bc99735477710ded1c110ad6093e6d6fca6356947c5effb3",
+          "attesterKey": "0xed15e6eee5e8d590ed922dd06ad38a25db47553f2359c92eb60cdbe7626458d3",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x65436053c5a0c96c9fcef4f2dfc2732e9ea5b1ae825b8965851fcf5f03052ef7",
+          "attesterKey": "0xaf968bd61f6af681b7c560c7c0a58366de1cbf3e5addbd3ba9d421e1852faecf",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xb31958809491d3b7579c0581e12c5a92eff961011689cb1fc843d529c953eae6",
+          "attesterKey": "0x17e25a9e6400e187488f8e4dff7ba1c45d88f91dcfab914af44d555206e543e5",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x8bf2888417e4a7363c2ddc7c8b2120224d6abdbbc0fc2846b9f2e869df8447a3",
+          "attesterKey": "0x5c4a6d3a49dfbfe13b2da91c95db6068aef410e3657bb6062052930172ada5f6",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x41aec63b20f8d227f4ed330d48d8ad3baaf42ae63af29b0e97652c806f89ebc8",
+          "attesterKey": "0x3c136619e043492e938ae796961d89b64a4271dea51b5df21edc8f270fd9220c",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xac9af120f2e5252dd4a3fcc70125bc4774e62a3b7f534335fe94634174c8c484",
+          "attesterKey": "0x51dec8fa8ff6faa0a35c2e88874ce5cb7ab25b00bed3572271eb9c535524b950",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x7c8ec64846d18601052a2d1e5ca48c73c74568a6fa055a917744a5bee9de1fd9",
+          "attesterKey": "0xd05ba49f872a1be8289f6a4c485919c28e6d1b8ed31c08c51e133c146250a1b3",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x0f2585bd4fbcbb24f4eda4efa187e284f3da6b1c5d0f19790c8853240e8f1acb",
+          "attesterKey": "0x3a456ee0537812f019414a2066696dcac00bb65eb76a070e35926f855e1760f7",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xc1aa4edcc64e32f3187300141818767a916040f56f78998fe1f0c62ca07ad00c",
+          "attesterKey": "0x6160143ea36b0b8380a39004eca1e151794171e417e089784ee053025d9c4a94",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        }
+      ],
+      "expected": {
+        "attestationCountRaw": 12,
+        "attestationCountEffective": 2.0
+      }
+    },
+    {
+      "name": "single-attestation",
+      "note": "Trivial floor case: exactly one attestation, one operator. N_eff=1 by construction, not a special case in the formula -- it falls out of 1/sum(share_i^2) with a single share of 1.0.",
+      "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
+      "log": [
+        {
+          "eventId": "0x3e9e44769aade608682ffcf144bbd89e2c6ec15ed7fb643f44ea90e0dbed049c",
+          "attesterKey": "0xb08f4e93a3ccebf579ed3c89da4793e7aef4c918124ff08b639698919ad48ae4",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        }
+      ],
+      "expected": {
+        "attestationCountRaw": 1,
+        "attestationCountEffective": 1.0
+      }
+    },
+    {
+      "name": "invalid-signatures-excluded",
+      "note": "Merlini's review catch (2026-07-30 PR review, agent-ercs#10): every prior vector was all-sigValid=true, so the signature-gate EXCLUSION rule was never actually pinned by a case. Here, 3 real operators each contribute 2 valid attestations (6 total, N_eff=3 -- same shape as the even-split vector above), PLUS 4 more attestation attempts with sigValid=false attached to a 4th operator. The invalid ones are present in the raw log (a real attempt happened) but MUST be excluded entirely from both attestationCountRaw (stays 6, not 10) and attestationCountEffective (stays 3.0, the 4th operator contributes zero share) -- confirming the pre-existing signature-gate rule and the new diversity weighting compose correctly rather than one silently overriding the other.",
+      "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
+      "log": [
+        {
+          "eventId": "0x8df5c4e2e9ce17ddfc577e19b205b4e5640c59d0d68d301c88702ff43d159ce8",
+          "attesterKey": "0xff971017538043065ff88d18867fa704d25e85b01a18f7867e37a104dbadfbee",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xab8535ae17f99d2d7891b7896643bd0e679fca75788c6c1baf9351dc24a1e26b",
+          "attesterKey": "0xda3c351d5f5173c4ec87db801d370c94939ea20c9142a8bb2d9fbece013bceb6",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x335b1a8a99987cd1fde02bd4ed5ef84700f8c2f333dd3735809f0b56cf584650",
+          "attesterKey": "0x33be1030178a77e4950dbe16e9834f6cbd74bd8416e9eaeaa52d2244eb2fcd3e",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xf0a3d3e6c274f70f03cabb3857630530f6a1c0995c567048982c1f9659cde815",
+          "attesterKey": "0xe3b96f5581d50ecb627e6406d807cdd1be2838d215936df9aec402c2bb06893d",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x20f15e1fba6e43571bfcfef9879fcbc51b652968d25025a671301b1936499964",
+          "attesterKey": "0x3ddf11fb4abdce9cec3912dc02c64ea5f43ce34951c90d4f0c419c38bf0399b1",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x7520ba4136ace51b6ac0e2efcaafd6c374733ce85f9bf8901972b243673e8e5e",
+          "attesterKey": "0x9db7381ea549a21e0e3368dd2d6bfdd7b896bf390ee605613dfffed98caf748d",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x198c2c8418e91affbe44ba89d5dc08a019ef55eef8f2b579d8529683b49d68b2",
+          "attesterKey": "0xfaf5ecb0147b7bfc9654570f7581fa7a8b241ba9a9e4ffe6bac0961ac3f3e7e5",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        },
+        {
+          "eventId": "0xb40d3fad7b24d13a178d938b2fd3ce654f84123c57ff07c1cda2dc8d2800bbd4",
+          "attesterKey": "0x51aaa3fbff96cd6ed04012969b8ca134d560397d4777249a0be76afd387b0e32",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        },
+        {
+          "eventId": "0xd464db72fb5dcadda20bacf37cb67d3da2f6baad6e4a537b8d8a5fbeb4850ce6",
+          "attesterKey": "0xcc317fab02dd0944580fe63546680873a16d67d49dbbf7b8bc043fa235ce5ef1",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        },
+        {
+          "eventId": "0xf7b49853d4cb0adeaa925e1be0bd6a0995fc77f1fb1ed21f96c5b44f64767d67",
+          "attesterKey": "0xef411132edf036e245d0d19f93730a7bacf1446230fff79055ca67233b7d1ae6",
+          "trueOperator": "0x014ad2698bd3f00fdac10b3e57285aa0a91cbd1c",
+          "sigValid": false
+        }
+      ],
+      "expected": {
+        "attestationCountRaw": 6,
+        "attestationCountEffective": 3.0
+      }
+    },
+    {
+      "name": "five-operators-one-outlier",
+      "note": "5 operators total: one large Sybil-suspect cluster (10 attestations from operator-A, structurally identical to the counterexample above) alongside 4 genuinely independent single-attestation operators. N_eff correctly stays low (dominated by the 10-share block) rather than being pulled toward 5 by the presence of minor independent voices.",
+      "agentId": "0xddaebf379f9b723f9b9ba32c8a0a9e2654e4b8cc",
+      "log": [
+        {
+          "eventId": "0x58be8dfee7e411497bf599e05bdaf68c8b74e0180e6d693a3b6a1f093edcd145",
+          "attesterKey": "0xf3b660ddecf242b237ce2eb4d2a105bca5319232cf3cac5f2585ea4a11dc522d",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x30cb2a3020a33061322c42af5e37cbb6d0fe575172011615911ccbf8827456f6",
+          "attesterKey": "0x83c0258dfcbdd1dacc6643a44f2d5f824c3c7cdeb592ddef306a13a90940c2c9",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x09bd1ffcb54f5a1211fdf223d144b8fbfa28c8cfd65796825d300b2332956351",
+          "attesterKey": "0xaebe9c4ea4dd0847d00edde6dfc8a0095000be2e025382db830a689da10790cf",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x61343a85effdfe8872733705e35a86c0434f32809d30d2d2d87c62f76e7cd3d9",
+          "attesterKey": "0x81ecd89320c30167d1cab04cd690ced8803f93745a34ead25181bb5a2a127407",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xc2286d26b1956085de6633ca7295baec6092d93910ec12efe343d2ef77828c13",
+          "attesterKey": "0x25828aa25fc86cc8125ce4d60026179c36a1a97573a98af3d951a0bf0caee13e",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x369afafd4624868b00d72f34beb699f96b484ff73cd48c8a170a11edf724f133",
+          "attesterKey": "0xe47a72285214276b5f0b86cdadbcc9f7c703c8a7c373ac434e8aa5418022142d",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xe373be3b672dff69f484df5e8388a7b743221f436f936eeaab6fb8f7e2ab91f9",
+          "attesterKey": "0xae3b38e67f1495a60ec97db6f3f331d861d2adfe76700f3286d432a9cb6e1c7b",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xabfacb4f72672fda9dc50de32a5b52b05eec4583dcd613fa271c7c5327c2f1fb",
+          "attesterKey": "0x26952edc6607a57d8d131a0393ba109027df4c384ac013c23138e81ad284539a",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xa92e79483d73a36323bc17b46651d1ba822ebe6d7482055a0d4b297282d3b9cd",
+          "attesterKey": "0xcc91f6f06f2cc1c29d2fffa79b22099f8caa49e1135543e1931d93c15aee841e",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x1dc31c7e27f3a9b1d0cdd6237bb2807a0165233465c29f1e0477c1ffa4f9db28",
+          "attesterKey": "0xf71db9b58e08f8a337fd93d1ab47fe3a8cc1aafd6d52c64323cbde2944bc2605",
+          "trueOperator": "0xd7917410afe84f95d85711659db39863f660a20a",
+          "sigValid": true
+        },
+        {
+          "eventId": "0x893fdaebc261cffbd94dfd8082d06644aa875a4a2cfcb9bc1ddf368c1ff33952",
+          "attesterKey": "0x6a61022d3468d074552a75d419de0ab2b6191366b08216903e95a4b2ba595731",
+          "trueOperator": "0x5c6be8b000a669b5e7f131247c308793ef1455b8",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xad13a4b93e33a6249490413edd57394f27087f39f47a61db6788467e7c5588eb",
+          "attesterKey": "0xa1ba19a5541683c1560f54db7274d89892fa732fb779fc02488836299e6bec34",
+          "trueOperator": "0x92d10f5ed59339589406e0479e58c0ec7ae9cf74",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xfd4c179669de652ec383a8e122d755d47715a437b39d65d50953cd18ad06a5eb",
+          "attesterKey": "0x4fe7353a045440620f5a98eb655df39aa36df16b18d7cd7beb39b036c2bfd862",
+          "trueOperator": "0xce5b3aa43d6891f25a28d5ae0bf7d05f3e2bc691",
+          "sigValid": true
+        },
+        {
+          "eventId": "0xb1a3fb68913ad3d9a9748ae6891c0acacd0cad6514a3092e357ddfa31f4b56a6",
+          "attesterKey": "0x45eba5e59953ff5022fb643aee62028197368d21d3b3cb271490c083490a0a87",
+          "trueOperator": "0xc52c02d53f6206d734d9f360c620419f5a566e0b",
+          "sigValid": true
+        }
+      ],
+      "expected": {
+        "attestationCountRaw": 14,
+        "attestationCountEffective": 1.884615
+      }
+    }
+  ]
+}
