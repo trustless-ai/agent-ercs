@@ -31,6 +31,7 @@ import {InterfaceName} from "@agent-ercs/contracts/<category>/<ERCXXXX>/FileName
 | **ERC-8301** | AI Agent Execution | `execution/` | Universal task dispatch, FSM orchestration, and verifiable step-execution evidence chain |
 | **ERC-8312** | Bounded Agent Actions | `metering/` | Envelope registration and aggregate consumption metering against an accepted bound — the cursor holds the sum |
 | **ERC-8323** | Source-Token Agent Binding | `identity/` | Links external NFT ownership to ERC-8004 agent identity via on-chain provenance |
+| **ERC-8354** | Confidential Agent Policy Verdicts (CAPV) | `verify/` | Confidential pre-execution allow/deny verdict — proves an agent action clears a policy that is never revealed on-chain |
 
 > **Base implementation:** `ConsultEscrow` (`settlement/ConsultEscrow/ConsultEscrow.sol`) — trustless pay-on-delivery for agent consultations. No standalone ERC number (see its [README](contracts/settlement/ConsultEscrow/README.md) for the spec anchor).
 
