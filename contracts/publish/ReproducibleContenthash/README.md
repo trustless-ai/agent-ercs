@@ -4,7 +4,7 @@
 - **Discussion**: pending (Ethereum Magicians thread to open)
 - **Reference implementation**: [trustless-ai/cross-reference-console](https://github.com/trustless-ai/cross-reference-console) — `reference/verify_pin.py`, `reference/sign_confirmation.py`, `PIN-RECORD.md`; the off-chain form of this rule, already producing signed confirmations in the shape this interface consumes
 - **Status**: Draft
-- **Authors**: Tiago Merlini Ferrão (@TMerlini); co-authors open
+- **Authors**: Tiago Merlini Ferrão (@TMerlini), Pavlo (@pipavlo82)
 
 The `publish/` corner. Where the rest of this repo verifies what an agent *did*,
 this constrains what a name *says* — the last mile, and the one link in the chain
@@ -53,6 +53,13 @@ fixed the first.
 **A threshold, not a delegate list.** Authorising more addresses improves
 availability by multiplying the paths to a unilateral publish. The threshold keeps
 "no single party decides" while still removing the single-operator bottleneck.
+
+**Decision and execution mirror each other rather than being two trust models.**
+The two-party rebuild rule stays the decision rule; this contract is the execution
+path for it, and it verifies **the same confirmation semantics already exercised
+off-chain**. Nothing here invents a second notion of who is trusted — the on-chain
+check and the off-chain check consume the same signatures, so they cannot drift
+apart into disagreeing about what was agreed.
 
 **Confirmation signing is decoupled from any attestation scheme the publisher
 already uses.** A party may sign attestations under a scheme the EVM cannot verify
