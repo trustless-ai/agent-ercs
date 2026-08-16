@@ -13,11 +13,28 @@ struct Verdict {
     uint64  expiry;           // unix seconds, exclusive
     bytes32 nullifier;        // single-use, domain-scoped
     uint8   decision;         // 0 = DENY, 1 = ALLOW
+    uint8   policyKind;       // which of the four states this verdict carries (see PolicyKind)
+}
+
+/// @notice The four states a verdict can carry. `decision` alone collapses the
+/// three refusal kinds into one bit; `policyKind` keeps them distinguishable at
+/// the surface a relying party actually reads.
+library PolicyKind {
+    uint8 internal constant ALLOWED = 0;
+    uint8 internal constant DENIED = 1;
+    uint8 internal constant NOT_PERMITTED = 2;
+    uint8 internal constant COULD_NOT_EVALUATE = 3;
+
+    function agreesWithDecision(uint8 kind, uint8 decision) internal pure returns (bool) {
+        return decision == 1
+            ? kind == ALLOWED
+            : (kind == DENIED || kind == NOT_PERMITTED || kind == COULD_NOT_EVALUATE);
+    }
 }
 
 /// @notice Consume a confidential policy verdict: a ZK proof that an action was
 /// evaluated against a committed (secret) policy and permitted.
-/// @dev ERC-165 interfaceId = 0x6c832e88.
+/// @dev ERC-165 interfaceId = 0xd6da8150.
 ///
 /// Positioning within the trustless-ai `verify/` category: this is the CONFIDENTIAL
 /// verification primitive. Where ERC-8274 verifies that a computation ran (recomputable
@@ -42,6 +59,7 @@ interface IConfidentialPolicyVerdict is IERC165 {
     error PolicyRootRejected(bytes32 root);
     error DomainInactive(bytes32 domainId);
     error VerdictDenied();
+    error VerdictKindMismatch(uint8 decision, uint8 policyKind);
     error InvalidProof();
 
     /// @notice Verify without state change. MUST NOT revert on a well-formed-but-invalid
