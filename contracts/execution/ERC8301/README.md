@@ -37,18 +37,32 @@ Any party can traverse from `result().finalTaskHash` back to `run()` and verify 
 
 A workflow stage whose reply carries no plaintext output. The action and the policy stay hidden; the fact that the action cleared the policy stays verifiable. `IConfidentialStep.sol` defines that path by composing ERC-8301 with [ERC-8354](../../verify/ERC8354/README.md).
 
-It changes neither standard. There is no new function on `IAgentWorkflow` and no new public input on the ERC-8354 proving program. The confidential path rides the existing `onAgentProve(replyHashes, proof)` seam, whose proof encoding the spec already leaves verifier-specific, and fixes that encoding to `abi.encode(Verdict, proof)`.
+It changes neither standard and introduces no new commitment scheme. There is no new function on `IAgentWorkflow`, and no second action-commitment formula: `PolicyActionLib.commit` is normative, so a confidential step MAPS INTO the canonical `PolicyAction` fields rather than defining its own hash. A domain that can issue verdicts today can gate a workflow today.
 
-What it adds is two bindings.
+The confidential path rides the existing `onAgentProve(replyHashes, proof)` seam, whose proof encoding the spec already leaves verifier-specific, and fixes that encoding to `abi.encode(Verdict, proof, actionNonce)`.
 
-| Binding | Without it |
+| `PolicyAction` field | what a confidential step puts there |
 |---|---|
-| `v.actionCommitment == actionCommitmentFor(workflowRunId, replyHash)` | a verdict issued for one action could gate an unrelated reply |
-| `v.executor == reply.replier` | one agent's verdict could gate another agent's reply |
+| `chainId` | `block.chainid` |
+| `domainId` | the workflow's `policyDomain()` |
+| `agentId` | the ERC-8004 identity of the agent that replied |
+| `target` | the workflow contract |
+| `value` | `0`, a step moves no value |
+| `callDataHash` | a domain-separated commitment to `(workflowRunId, replyHash)` |
+| `actionNonce` | monotonic per `(domain, agent)` |
 
-Both use fields that are already part of every `Verdict`, so a domain issuing verdicts today can gate a workflow today.
+Three bindings fall out of that mapping, and the interface requires a fourth check the mapping cannot carry.
 
-The commitment is scoped to the run as well as the reply. `replyHash` already covers `workflowRunId`, but a verifier reading only `actionCommitment` should not have to depend on that, and the tests pin it.
+| Binding | Where it lives | Without it |
+|---|---|---|
+| the exact step | `callDataHash` | a verdict for one action gates an unrelated reply |
+| the replying agent | `agentId` | one agent's verdict gates another agent's reply |
+| the chain and domain | `chainId`, `domainId` | cross-chain or cross-domain replay |
+| the domain the workflow trusts | `policyDomain()` check | an ALLOW from a more permissive domain gates a stricter step |
+
+That last one is not implied by the commitment. The ERC-8354 Guard validates whichever domain the verdict supplies; it has no way to know which domain this workflow intended to trust. `PolicyDomainMismatch` makes the boundary explicit.
+
+The executor is the **workflow contract**, not the replier. Direct `consume` requires `v.executor == msg.sender`, and on this path the caller is the workflow reached through `onAgentProve`; naming the replier would make the direct path unsatisfiable and force the relayed overload, which needs an `executorAuth` signature the workflow cannot obtain mid-transition. Nothing is lost, because the agent binding is carried by `agentId` inside the normative commitment. `executor` answers a different question, which is who may submit, and in a workflow the submitter is the workflow. Consumption stays atomic with the transition rather than being a separable call another party can front-run.
 
 ### Refusals stay distinguishable
 
