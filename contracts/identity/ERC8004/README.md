@@ -1,6 +1,6 @@
 # ERC-8004: Trustless Agents
 
-- **Spec**: [ERC-8004](https://github.com/ethereum/ERCs/pull/...)
+- **Spec**: [ERC-8004](https://github.com/ethereum/ERCs/pull/1170)
 - **Discussion**: [Ethereum Magicians #25098](https://ethereum-magicians.org/t/erc-8004-trustless-agents/25098)
 - **Status**: Draft
 - **Authors**: Marco De Rossi (@MarcoMetaMask), Davide Crapis (@dcrapis), Jordan Ellis, Erik Reppel
@@ -35,4 +35,4 @@ IValidationRegistry
 ## Related ERCs
 
 - [ERC-8274](https://github.com/ethereum/ERCs/pull/1771) — AI Inference Proof Verification (validators can implement `IProofVerifier`)
-- [ERC-8301](https://github.com/ethereum/ERCs/pull/...) — AI Agent Execution (agents registered here execute tasks there)
+- [ERC-8301](https://github.com/ethereum/ERCs/pull/1815) — AI Agent Execution (agents registered here execute tasks there)

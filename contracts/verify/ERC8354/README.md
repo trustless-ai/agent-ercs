@@ -38,5 +38,5 @@ An off-chain policy engine evaluates an agent action against a secret ruleset co
 ## Related ERCs (the two corners)
 
 - [ERC-8274 / AI Inference Proof Verification](https://github.com/ethereum/ERCs/pull/1771) — verifies the computation ran (recomputable or proof-attested). Orthogonal: 8354 is confidential-correct, not public-recomputable.
-- [ERC-8281 / OCP](https://ethereum-magicians.org/t/erc-8274-ai-inference-proof-verification/28083) — observation commitment (recompute-and-compare). 8354 occupies the corner that cannot be recomputed, the policy is never revealed.
-- [ERC-8299 / WYRIWE](https://ethereum-magicians.org/t/erc-8274-ai-inference-proof-verification/28083) — transparent input provenance. A confidential provenance variant is future work.
+- [ERC-8281 / OCP](https://ethereum-magicians.org/t/draft-erc-observation-commitment-protocol-ocp-chain-agnostic-cryptographic-commitment-primitive/28399) — observation commitment (recompute-and-compare). 8354 occupies the corner that cannot be recomputed, the policy is never revealed.
+- [ERC-8299 / WYRIWE](https://ethereum-magicians.org/t/wyriwe-what-you-read-is-what-you-execute-input-provenance-for-verifiable-ai-inference/28655) — transparent input provenance. A confidential provenance variant is future work.

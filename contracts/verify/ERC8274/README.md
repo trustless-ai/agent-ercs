@@ -27,6 +27,6 @@ Settlement Contract (IAgentVerifiable)
 
 ## Related ERCs
 
-- [ERC-8281 / OCP](https://github.com/ethereum/ERCs/pull/...) — input provenance (what was committed)
+- [ERC-8281 / OCP](https://github.com/ethereum/ERCs/pull/1788) — input provenance (what was committed)
 - [ERC-8263 / TruthAnchor](https://github.com/ethereum/ERCs/pull/...) — temporal anchoring (when it was committed)
-- [ERC-8301](https://github.com/ethereum/ERCs/pull/...) — execution dispatch (the task that produced the inference)
+- [ERC-8301](https://github.com/ethereum/ERCs/pull/1815) — execution dispatch (the task that produced the inference)
