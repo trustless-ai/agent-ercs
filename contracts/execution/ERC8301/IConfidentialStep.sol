@@ -91,23 +91,42 @@ library ConfidentialStep {
     }
 
     /// @notice The `proof` payload for `IAgentWorkflow.onAgentProve` on a confidential step.
-    /// @dev    `IAgentWorkflow` leaves this encoding verifier-specific. A confidential step fixes
-    ///         it to the verdict, the ERC-8354 proof bytes, and the `actionNonce` the commitment
-    ///         was built over, which the workflow cannot infer on its own.
-    function encodeProof(Verdict memory v, bytes memory verdictProof, uint256 actionNonce)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return abi.encode(v, verdictProof, actionNonce);
+    /// @dev    `IAgentWorkflow` leaves this encoding verifier-specific and allows `onAgentProve` to
+    ///         cover MORE THAN ONE `replyHash`. A verdict commits to exactly one action, so it
+    ///         cannot span several replies. The payload therefore carries parallel arrays, one
+    ///         entry per reply hash, validated and consumed individually.
+    ///
+    ///         An earlier revision carried a single verdict and silently assumed a single reply.
+    ///         That assumption is not the interface's, so it does not belong here.
+    function encodeProof(
+        Verdict[] memory verdicts,
+        bytes[] memory verdictProofs,
+        uint256[] memory actionNonces
+    ) internal pure returns (bytes memory) {
+        return abi.encode(verdicts, verdictProofs, actionNonces);
     }
 
     function decodeProof(bytes memory payload)
         internal
         pure
-        returns (Verdict memory v, bytes memory verdictProof, uint256 actionNonce)
+        returns (Verdict[] memory verdicts, bytes[] memory verdictProofs, uint256[] memory actionNonces)
     {
-        (v, verdictProof, actionNonce) = abi.decode(payload, (Verdict, bytes, uint256));
+        (verdicts, verdictProofs, actionNonces) =
+            abi.decode(payload, (Verdict[], bytes[], uint256[]));
+    }
+
+    /// @notice Whether a decoded payload is well formed against the reply hashes it accompanies.
+    /// @dev    Every reply gets its own verdict, proof and nonce. A payload that is shorter than
+    ///         the reply list would leave replies ungated while the call still succeeds, which is
+    ///         the failure this check exists to prevent.
+    function payloadMatches(
+        uint256 replyCount,
+        Verdict[] memory verdicts,
+        bytes[] memory verdictProofs,
+        uint256[] memory actionNonces
+    ) internal pure returns (bool) {
+        return verdicts.length == replyCount && verdictProofs.length == replyCount
+            && actionNonces.length == replyCount;
     }
 }
 
@@ -130,6 +149,19 @@ interface IConfidentialStep {
     /// @dev    Carried in `PolicyAction.agentId`, not in `Verdict.executor`. See
     ///         `verdictExecutor()` for why.
     error AgentMismatch(uint256 expected, uint256 actual);
+
+    /// @notice The replying address is not authorized to act for this ERC-8004 agent.
+    /// @dev    Putting `agentId` inside the commitment binds the verdict to an identity, but says
+    ///         nothing about whether the address that actually replied controls that identity.
+    ///         Without this check, one agent could submit a reply under another agent's id.
+    error AgentNotAuthorized(uint256 agentId, address replier);
+
+    /// @notice The payload does not carry one verdict, proof and nonce per reply hash.
+    error PayloadLengthMismatch(uint256 replyCount, uint256 verdicts, uint256 proofs, uint256 nonces);
+
+    /// @notice The action nonce is not the next one for this agent under this domain.
+    /// @dev    ERC-8354 requires `actionNonce` to be strictly increasing per `(domain, agent)`.
+    error NonceOutOfOrder(uint256 agentId, uint256 expected, uint256 actual);
 
     /// @notice The reply carried plaintext output on a stage declared confidential.
     error OutputNotWithheld(bytes32 replyHash);
@@ -180,9 +212,28 @@ interface IConfidentialStep {
     ///         indistinguishable from one that failed to produce output.
     function isConfidentialStage(uint8 stage) external view returns (bool);
 
+    /// @notice The ERC-8004 Identity Registry this workflow resolves agent identities against.
+    function identityRegistry() external view returns (address);
+
+    /// @notice Whether `account` may act for `agentId`.
+    /// @dev    ERC-8004's Identity Registry is an ERC-721, so authorization is already defined:
+    ///         the token owner, an address approved for that token, or an operator approved for
+    ///         all of the owner's tokens. This profile reuses those semantics rather than
+    ///         inventing a delegation scheme of its own.
+    ///
+    ///         Note that `getAgentWallet(agentId)` is NOT the right source here. That is the
+    ///         agent's payment wallet, which is a different question from who controls the
+    ///         identity, and using it would authorize the wrong address.
+    function isAuthorizedAgent(uint256 agentId, address account) external view returns (bool);
+
     /// @notice The next `actionNonce` for an agent under this workflow's domain.
     /// @dev    Monotonic per `(domain, agent)` as ERC-8354 requires, exposed so an issuer can
     ///         build a commitment the workflow will accept.
+    ///
+    ///         A confidential step MUST require the payload's `actionNonce` to equal this value at
+    ///         the time of settlement, MUST increment it atomically once the verdict is consumed,
+    ///         and MUST roll the increment back if the transition then fails. Otherwise a failed
+    ///         transition burns a nonce and every later verdict for that agent is stale.
     function nextActionNonce(uint256 agentId) external view returns (uint256);
 
     /// @notice The commitment a verdict must carry to gate `replyHash` in `workflowRunId`.

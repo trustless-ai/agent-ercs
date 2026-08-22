@@ -1,6 +1,6 @@
 # ERC-8301: AI Agent Execution
 
-- **Spec**: [ERC-8301](https://github.com/ethereum/ERCs/pull/...)
+- **Spec**: [ERC-8301](https://github.com/ethereum/ERCs/pull/1815)
 - **Discussion**: [Ethereum Magicians #28785](https://ethereum-magicians.org/t/erc-8301-ai-agent-execution/28785)
 - **Status**: Draft
 - **Author**: JimmyShi22
@@ -9,8 +9,12 @@
 
 | File | Role |
 |------|------|
-| `IAgentWorkflow.sol` | Universal agent execution interface + `AgentTask` / `AgentReply` / `RunStatus` |
-| `IConfidentialStep.sol` | A stage gated by an ERC-8354 verdict instead of plaintext output |
+| `IAgentWorkflow.sol` | **Core interface** — universal agent execution, `AgentTask` / `AgentReply` / `RunStatus` |
+| `IConfidentialStep.sol` | **Optional composition extension** — confidential workflow steps gated by ERC-8354 verdicts |
+
+`IAgentWorkflow` is the core of ERC-8301 and stands alone. `IConfidentialStep` is an optional profile
+for composing ERC-8301 with ERC-8354; nothing in the core depends on it, and a workflow that never
+declares a confidential stage never touches it.
 
 ## Architecture
 
@@ -64,6 +68,32 @@ That last one is not implied by the commitment. The ERC-8354 Guard validates whi
 
 The executor is the **workflow contract**, not the replier. Direct `consume` requires `v.executor == msg.sender`, and on this path the caller is the workflow reached through `onAgentProve`; naming the replier would make the direct path unsatisfiable and force the relayed overload, which needs an `executorAuth` signature the workflow cannot obtain mid-transition. Nothing is lost, because the agent binding is carried by `agentId` inside the normative commitment. `executor` answers a different question, which is who may submit, and in a workflow the submitter is the workflow. Consumption stays atomic with the transition rather than being a separable call another party can front-run.
 
+### One verdict per reply
+
+`onAgentProve` accepts an array of reply hashes. A verdict commits to exactly one action, so it
+cannot span several replies. The payload carries parallel arrays, one verdict, proof and nonce per
+reply hash, each validated and consumed individually. A payload shorter than the reply list would
+leave replies ungated while the call still succeeds, so the lengths are checked rather than assumed.
+
+### Who may act for an agent
+
+Putting `agentId` inside the commitment binds a verdict to an identity. It says nothing about
+whether the address that replied controls that identity, so the profile checks that separately.
+
+ERC-8004's Identity Registry is an ERC-721, so the authorization rule already exists: the token
+owner, an address approved for that token, or an operator approved for all of the owner's tokens.
+This profile reuses those semantics rather than defining delegation of its own.
+
+`getAgentWallet(agentId)` is deliberately not used. That is the agent's payment wallet, which is a
+different question from who controls the identity, and authorizing it would authorize the wrong
+address.
+
+### Nonce ordering
+
+`actionNonce` must equal `nextActionNonce(agentId)` at settlement, increments atomically once the
+verdict is consumed, and rolls back if the transition then fails. Without the rollback a failed
+transition burns a nonce and every verdict already issued for that agent goes stale.
+
 ### Refusals stay distinguishable
 
 A step gated shut carries `policyKind`, not just a failed gate. "A rule refused this", "nothing authorized this", and "the policy could not be evaluated" reach the consumer as different states. For a step that must prove it was refused rather than never attempted, the refusal is anchored separately; that companion lives in the CAPV repository, since this repository holds interfaces rather than reference implementations.
@@ -76,5 +106,5 @@ This is the confidential half of the gap that `AgentReplyAnchored` closes on the
 
 - [ERC-8274](https://github.com/ethereum/ERCs/pull/1771) — AI Inference Proof Verification (verifies agent replies)
 - [ERC-8354](../../verify/ERC8354/README.md) — Confidential Agent Policy Verdicts (gates a confidential step)
-- [ERC-8004](https://github.com/ethereum/ERCs/pull/...) — Trustless Agents (agent identity)
-- [ERC-8281 / OCP](https://github.com/ethereum/ERCs/pull/...) — input provenance
+- [ERC-8004](https://github.com/ethereum/ERCs/pull/1170) — Trustless Agents (agent identity)
+- [ERC-8281 / OCP](https://github.com/ethereum/ERCs/pull/1788) — input provenance
