@@ -43,7 +43,7 @@ A workflow stage whose reply carries no plaintext output. The action and the pol
 
 It changes neither standard and introduces no new commitment scheme. There is no new function on `IAgentWorkflow`, and no second action-commitment formula: `PolicyActionLib.commit` is normative, so a confidential step MAPS INTO the canonical `PolicyAction` fields rather than defining its own hash. A domain that can issue verdicts today can gate a workflow today.
 
-The confidential path rides the existing `onAgentProve(replyHashes, proof)` seam, whose proof encoding the spec already leaves verifier-specific, and fixes that encoding to `abi.encode(Verdict, proof, actionNonce)`.
+The confidential path rides the existing `onAgentProve(replyHashes, proof)` seam, whose proof encoding the spec already leaves verifier-specific, and fixes that encoding to `abi.encode(Verdict[], bytes[], uint256[])`, one verdict, proof and nonce per entry in `replyHashes` and in the same order.
 
 | `PolicyAction` field | what a confidential step puts there |
 |---|---|
