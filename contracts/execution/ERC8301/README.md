@@ -9,7 +9,12 @@
 
 | File | Role |
 |------|------|
-| `IAgentWorkflow.sol` | Universal agent execution interface + `AgentTask` / `AgentReply` / `RunStatus` |
+| `IAgentWorkflow.sol` | **Core interface** — universal agent execution, `AgentTask` / `AgentReply` / `RunStatus` |
+| `IConfidentialStep.sol` | **Optional composition extension** — confidential workflow steps gated by ERC-8354 verdicts |
+
+`IAgentWorkflow` is the core of ERC-8301 and stands alone. `IConfidentialStep` is an optional profile
+for composing ERC-8301 with ERC-8354; nothing in the core depends on it, and a workflow that never
+declares a confidential stage never touches it.
 
 ## Architecture
 
@@ -32,8 +37,74 @@ Every `AgentTask` and `AgentReply` is linked via bidirectional hashes:
 
 Any party can traverse from `result().finalTaskHash` back to `run()` and verify every transition was gate-approved.
 
+## Confidential steps
+
+A workflow stage whose reply carries no plaintext output. The action and the policy stay hidden; the fact that the action cleared the policy stays verifiable. `IConfidentialStep.sol` defines that path by composing ERC-8301 with [ERC-8354](../../verify/ERC8354/README.md).
+
+It changes neither standard and introduces no new commitment scheme. There is no new function on `IAgentWorkflow`, and no second action-commitment formula: `PolicyActionLib.commit` is normative, so a confidential step MAPS INTO the canonical `PolicyAction` fields rather than defining its own hash. A domain that can issue verdicts today can gate a workflow today.
+
+The confidential path rides the existing `onAgentProve(replyHashes, proof)` seam, whose proof encoding the spec already leaves verifier-specific, and fixes that encoding to `abi.encode(Verdict[], bytes[], uint256[])`, one verdict, proof and nonce per entry in `replyHashes` and in the same order.
+
+| `PolicyAction` field | what a confidential step puts there |
+|---|---|
+| `chainId` | `block.chainid` |
+| `domainId` | the workflow's `policyDomain()` |
+| `agentId` | the ERC-8004 identity of the agent that replied |
+| `target` | the workflow contract |
+| `value` | `0`, a step moves no value |
+| `callDataHash` | a domain-separated commitment to `(workflowRunId, replyHash)` |
+| `actionNonce` | monotonic per `(domain, agent)` |
+
+Three bindings fall out of that mapping, and the interface requires a fourth check the mapping cannot carry.
+
+| Binding | Where it lives | Without it |
+|---|---|---|
+| the exact step | `callDataHash` | a verdict for one action gates an unrelated reply |
+| the replying agent | `agentId` | one agent's verdict gates another agent's reply |
+| the chain and domain | `chainId`, `domainId` | cross-chain or cross-domain replay |
+| the domain the workflow trusts | `policyDomain()` check | an ALLOW from a more permissive domain gates a stricter step |
+
+That last one is not implied by the commitment. The ERC-8354 Guard validates whichever domain the verdict supplies; it has no way to know which domain this workflow intended to trust. `PolicyDomainMismatch` makes the boundary explicit.
+
+The executor is the **workflow contract**, not the replier. Direct `consume` requires `v.executor == msg.sender`, and on this path the caller is the workflow reached through `onAgentProve`; naming the replier would make the direct path unsatisfiable and force the relayed overload, which needs an `executorAuth` signature the workflow cannot obtain mid-transition. Nothing is lost, because the agent binding is carried by `agentId` inside the normative commitment. `executor` answers a different question, which is who may submit, and in a workflow the submitter is the workflow. Consumption stays atomic with the transition rather than being a separable call another party can front-run.
+
+### One verdict per reply
+
+`onAgentProve` accepts an array of reply hashes. A verdict commits to exactly one action, so it
+cannot span several replies. The payload carries parallel arrays, one verdict, proof and nonce per
+reply hash, each validated and consumed individually. A payload shorter than the reply list would
+leave replies ungated while the call still succeeds, so the lengths are checked rather than assumed.
+
+### Who may act for an agent
+
+Putting `agentId` inside the commitment binds a verdict to an identity. It says nothing about
+whether the address that replied controls that identity, so the profile checks that separately.
+
+ERC-8004's Identity Registry is an ERC-721, so the authorization rule already exists: the token
+owner, an address approved for that token, or an operator approved for all of the owner's tokens.
+This profile reuses those semantics rather than defining delegation of its own.
+
+`getAgentWallet(agentId)` is deliberately not used. That is the agent's payment wallet, which is a
+different question from who controls the identity, and authorizing it would authorize the wrong
+address.
+
+### Nonce ordering
+
+`actionNonce` must equal `nextActionNonce(agentId)` at settlement, increments atomically once the
+verdict is consumed, and rolls back if the transition then fails. Without the rollback a failed
+transition burns a nonce and every verdict already issued for that agent goes stale.
+
+### Refusals stay distinguishable
+
+A step gated shut carries `policyKind`, not just a failed gate. "A rule refused this", "nothing authorized this", and "the policy could not be evaluated" reach the consumer as different states. For a step that must prove it was refused rather than never attempted, the refusal is anchored separately; that companion lives in the CAPV repository, since this repository holds interfaces rather than reference implementations.
+
+This is the confidential half of the gap that `AgentReplyAnchored` closes on the transparent side: a reply that was anchored but never gated is observable as exactly that, via `stepVerdict(replyHash).settled == false`.
+
+> Note: `IAgentWorkflow.sol` here does not yet carry the `AgentReplyAnchored` event agreed on the discussion thread. Worth syncing separately from this file.
+
 ## Related ERCs
 
 - [ERC-8274](https://github.com/ethereum/ERCs/pull/1771) — AI Inference Proof Verification (verifies agent replies)
+- [ERC-8354](../../verify/ERC8354/README.md) — Confidential Agent Policy Verdicts (gates a confidential step)
 - [ERC-8004](https://github.com/ethereum/ERCs/pull/1170) — Trustless Agents (agent identity)
 - [ERC-8281 / OCP](https://github.com/ethereum/ERCs/pull/1788) — input provenance
