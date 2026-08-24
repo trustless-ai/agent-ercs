@@ -121,6 +121,17 @@ interface IAgentWorkflow {
         bytes32 indexed taskHash
     );
 
+    /// @notice Emitted when a reply is anchored, before gate evaluation.
+    /// Fires for every profile — transparent, confidential, attested — at the
+    /// same anchor point. A consumer can observe that a reply was submitted and
+    /// retrieve it via getAgentReply(replyHash), regardless of whether the gate
+    /// later accepts or silently discards it.
+    event AgentReplyAnchored(
+        bytes32 indexed workflowRunId,
+        bytes32 indexed replyHash,
+        address indexed replier
+    );
+
     /// @notice Emitted when a run reaches a terminal state.
     event WorkflowCompleted(
         bytes32   indexed workflowRunId,
