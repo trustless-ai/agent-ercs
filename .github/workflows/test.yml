@@ -1,0 +1,33 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: foundry-rs/foundry-toolchain@v1
+
+      # lib/ is gitignored and .gitmodules carries no gitlink, so a fresh
+      # checkout has no dependencies at all and `forge test` cannot resolve
+      # the remappings in foundry.toml. Fetch them at pinned tags here so the
+      # run is reproducible rather than depending on whatever a contributor
+      # happens to have on disk.
+      - name: Install dependencies
+        run: |
+          git clone --depth 1 --branch v1.16.2 \
+            https://github.com/foundry-rs/forge-std lib/forge-std
+          git clone --depth 1 --branch v4.8.0 \
+            https://github.com/OpenZeppelin/openzeppelin-contracts \
+            lib/openzeppelin-contracts
+
+      - name: Build
+        run: forge build
+
+      - name: Test
+        run: forge test -vv
