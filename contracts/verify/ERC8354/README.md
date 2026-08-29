@@ -15,6 +15,7 @@ The confidential member of the `verify/` category. Where the others verify a com
 | `IConfidentialPolicyVerdict.sol` | The Guard: `verify` / `consume` / `isConsumed`, and the `Verdict` envelope (normative core, interfaceId `0x6c832e88`) |
 | `PolicyAction.sol` | Canonical action-commitment preimage, domain-separated by `chainId` + `domainId`, hashed identically on-chain and in-circuit |
 | `IPolicyDomainRegistry.sol` | Companion registry: domains, root rotation with grace, immediate revocation |
+| `IIdentityRegistry.sol` | The single ERC-8004 call a Guard needs, an ERC-721 `ownerOf` read, declared minimally instead of importing ERC-8004 in full |
 
 ## Where it sits
 
@@ -32,7 +33,7 @@ An off-chain policy engine evaluates an agent action against a secret ruleset co
 ## Composition with this stack
 
 - **ERC-8274** — the CAPV verifier boundary is prover-agnostic (`IVerifier.verifyProof(programKey, publicInputs, proof)`). A domain MAY use an ERC-8274 `IProofVerifier` as that backend, so the same interface that verifies the inference also verifies the policy verdict.
-- **ERC-8004** — `Verdict.agentId` is an ERC-8004 Identity Registry token id.
+- **ERC-8004** — `Verdict.agentId` is an ERC-8004 Identity Registry token id. A domain MAY declare that registry as `Domain.identityRegistry`. Where declared, `consume` MUST reject a verdict whose `agentId` is not a live token there, with `AgentUnknown`. Where undeclared (`address(0)`), no such check runs and `agentId` stays an opaque, cryptographically bound public input.
 - **ERC-8312** — an action can be both within a bounded mandate (8312) and permitted by a confidential policy (8354); the two compose cleanly.
 
 ## Related ERCs (the two corners)
