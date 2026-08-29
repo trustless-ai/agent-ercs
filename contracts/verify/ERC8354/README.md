@@ -12,10 +12,16 @@ The confidential member of the `verify/` category. Where the others verify a com
 
 | File | Role |
 |------|------|
-| `IConfidentialPolicyVerdict.sol` | The Guard: `verify` / `consume` / `isConsumed`, and the `Verdict` envelope (normative core, interfaceId `0x6c832e88`) |
+| `IConfidentialPolicyVerdict.sol` | The Guard: `verify` / `consume` / `isConsumed`, and the `Verdict` envelope (normative core, interfaceId `0xd6da8150`) |
 | `PolicyAction.sol` | Canonical action-commitment preimage, domain-separated by `chainId` + `domainId`, hashed identically on-chain and in-circuit |
 | `IPolicyDomainRegistry.sol` | Companion registry: domains, root rotation with grace, immediate revocation |
 | `IIdentityRegistry.sol` | The single ERC-8004 call a Guard needs, an ERC-721 `ownerOf` read, declared minimally instead of importing ERC-8004 in full |
+| `IVerifier.sol` | The prover-agnostic verifier boundary a domain's program is checked against: `verifyProof(programKey, publicInputs, proof)` |
+| `IPolicyAttestation.sol` | The attestation a consumed verdict hands to ERC-8004's Validation Registry, with `MECHANISM_ZK_SECRET_POLICY` as the source-class tag |
+
+This is the complete ERC-8354 asset set from the merged spec. Every file here
+is byte-for-byte identical to `assets/erc-8354/src` in
+[ethereum/ERCs#1919](https://github.com/ethereum/ERCs/pull/1919).
 
 ## Where it sits
 
