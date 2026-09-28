@@ -40,10 +40,11 @@ struct AgentTask {
 
 /// @notice Reply submitted by an agent in response to a dispatched task.
 /// @dev    replyHash = keccak256(abi.encode(
-///             reply.outputHash, reply.timestamp, reply.replier,
+///             reply.operationId, reply.outputHash, reply.timestamp, reply.replier,
 ///             keccak256(abi.encodePacked(reply.prevTaskHashes)),
 ///             reply.workflowRunId))
 struct AgentReply {
+    bytes32   operationId;      // Opaque logical operation identifier; stable across retries
     bytes32   outputHash;       // keccak256(output)
     bytes     output;           // Reply output plaintext; MAY be empty
     uint256   timestamp;        // Off-chain execution time (Unix)
