@@ -109,7 +109,9 @@ interface IAgentWorkflow {
 
     /// @notice Agent submits a reply to a dispatched task.
     /// @param  reply  See AgentReply; reply.replier MUST equal msg.sender
-    function onAgentReply(AgentReply calldata reply) external;
+    /// @return replyHash The canonical replyHash for this logical operation
+    function onAgentReply(AgentReply calldata reply)
+        external returns (bytes32 replyHash);
 
     /// @notice Submit a cryptographic proof covering one or more anchored replies.
     /// @param  replyHashes Each MUST have been anchored by onAgentReply
