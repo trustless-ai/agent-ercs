@@ -97,6 +97,14 @@ interface IAgentWorkflow {
             bytes32           verificationDigest
         );
 
+    /// @notice Resolve a logical reply operation to its canonical replyHash.
+    /// @return replyHash The first anchored replyHash; bytes32(0) if unknown
+    function getReplyHashByOperation(
+        bytes32 workflowRunId,
+        address replier,
+        bytes32 operationId
+    ) external view returns (bytes32 replyHash);
+
     // ── Agent Callbacks ──────────────────────────────────────────────────────
 
     /// @notice Agent submits a reply to a dispatched task.
