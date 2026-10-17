@@ -55,8 +55,11 @@ interface IAgentReputation is IClaimType {
     /// @param orderId Identifier of the settled order.
     /// @param proof   Proof of the settled outcome. Profile `verify_outcome.v0`
     ///                (conformance/verify-outcome-v0) pins a chain-recomputable format: chainId,
-    ///                settlement tx, release-event log index and governing_convention_hash,
-    ///                checked against that tx's receipt only. Other formats (e.g. a Merkle proof
+    ///                settlement tx, release-event log index, the log index of the Transfer that
+    ///                pays it, and governing_convention_hash, checked against that tx's receipt
+    ///                only. The proof names its payment, and the receipt must carry at least as
+    ///                many matching Transfers as matching releases, so one payment cannot settle
+    ///                several orders in a batch. Other formats (e.g. a Merkle proof
     ///                against a published settlement root) remain implementation-defined.
     ///                The v0 recompute is done by an off-chain verifier: a view function cannot
     ///                read a historical receipt, so an on-chain implementation verifies a carrier

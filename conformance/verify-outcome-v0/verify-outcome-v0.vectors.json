@@ -28,6 +28,7 @@
         "chainId": 8453,
         "txHash": "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -150,6 +151,7 @@
         "chainId": 8453,
         "txHash": "0x49d0b5b3fd1121d1850a373311a2294c5bb48e909cf6f49cd1f7a00ecc75189d",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -208,6 +210,7 @@
         "chainId": 8453,
         "txHash": "0xa4b970fec9ffdf34682960c6c1652e29a424aaec0f87bc624e12dcc88cea363d",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -266,6 +269,7 @@
         "chainId": 8453,
         "txHash": "0x682868acb2e4fa019cd85bf3818f5dd3c79ba1c464ce0e14021e87e4ded1a0dd",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -324,6 +328,7 @@
         "chainId": 8453,
         "txHash": "0x418503a65dbdcfa605d9f6b865d3b178e361d81140599e9c51a1029043e074c6",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -382,6 +387,7 @@
         "chainId": 8453,
         "txHash": "0x0e614c877582d0d2d9c0cfd089026d849047de08c49a09f7fb761a471365c07b",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -448,6 +454,7 @@
         "chainId": 8453,
         "txHash": "0x6dcfe99b634cf9c59ecd2d2be1e296d845368c70f0c6b137fb056b3ebdd7c79b",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -505,6 +512,7 @@
         "chainId": "8453",
         "txHash": "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -563,6 +571,7 @@
         "chainId": 8453,
         "txHash": "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {},
@@ -585,6 +594,7 @@
         "chainId": 8453,
         "txHash": "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
       },
       "chain": {
@@ -602,6 +612,133 @@
       }
     },
     {
+      "name": "transfer-index-mismatch",
+      "note": "The receipt carries both a release and a matching Transfer, but the proof names the release's own logIndex as transferLogIndex. The proof must NAME the payment it relies on; a checker that searches for any matching Transfer instead would accept this.",
+      "order": {
+        "orderId": "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662",
+        "chainId": 8453,
+        "escrow": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+        "asset": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+        "provider": "0x37ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4",
+        "amount": "2500000"
+      },
+      "proof": {
+        "chainId": 8453,
+        "txHash": "0x07be361bef0dc3e50f297641c4967ade5360648efaf068e69be72f0282b748e1",
+        "releaseLogIndex": 0,
+        "transferLogIndex": 0,
+        "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
+      },
+      "chain": {
+        "8453": {
+          "receipts": {
+            "0x07be361bef0dc3e50f297641c4967ade5360648efaf068e69be72f0282b748e1": {
+              "transactionHash": "0x07be361bef0dc3e50f297641c4967ade5360648efaf068e69be72f0282b748e1",
+              "blockNumber": 21000000,
+              "status": 1,
+              "logs": [
+                {
+                  "logIndex": 0,
+                  "address": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+                  "topics": [
+                    "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5",
+                    "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662"
+                  ],
+                  "data": "0x124e69ee8bf0e3962368d9cfc80937df3f2156ab0d4e420b71530d9319b62dd39bdba526f2d82e6295bb99e5d2a69a8bc0b71840eae637464a7564ced6be7b9a00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b400000000000000000000000000000000000000000000000000000000002625a0"
+                },
+                {
+                  "logIndex": 1,
+                  "address": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+                  "topics": [
+                    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                    "0x00000000000000000000000078d011cf18c42ea5f45552badb861745ffdcc2b1",
+                    "0x00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4"
+                  ],
+                  "data": "0x00000000000000000000000000000000000000000000000000000000002625a0"
+                }
+              ]
+            }
+          },
+          "blocks": {
+            "21000000": [
+              "0x07be361bef0dc3e50f297641c4967ade5360648efaf068e69be72f0282b748e1"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "name": "two-releases-one-transfer",
+      "note": "A batch receipt releases TWO orders to the same provider for the same amount but carries only ONE Transfer. Both proofs can name that same log, so naming alone is not enough: the receipt must carry at least as many matching payments as matching releases, or one payment mints two settled outcomes and two reputation increments (raised by Tiago/Echo).",
+      "order": {
+        "orderId": "0x6685129641dfc25020b133b6fb4a7e85a0b68d02cb4d5a7689955a905abe6567",
+        "chainId": 8453,
+        "escrow": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+        "asset": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+        "provider": "0x37ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4",
+        "amount": "2500000"
+      },
+      "proof": {
+        "chainId": 8453,
+        "txHash": "0x41c51e1fb8e6ed06206be28951ac6b1f71a90df1788655799f357a03d61bcf4f",
+        "releaseLogIndex": 1,
+        "transferLogIndex": 2,
+        "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
+      },
+      "chain": {
+        "8453": {
+          "receipts": {
+            "0x41c51e1fb8e6ed06206be28951ac6b1f71a90df1788655799f357a03d61bcf4f": {
+              "transactionHash": "0x41c51e1fb8e6ed06206be28951ac6b1f71a90df1788655799f357a03d61bcf4f",
+              "blockNumber": 21000000,
+              "status": 1,
+              "logs": [
+                {
+                  "logIndex": 0,
+                  "address": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+                  "topics": [
+                    "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5",
+                    "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662"
+                  ],
+                  "data": "0x124e69ee8bf0e3962368d9cfc80937df3f2156ab0d4e420b71530d9319b62dd39bdba526f2d82e6295bb99e5d2a69a8bc0b71840eae637464a7564ced6be7b9a00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b400000000000000000000000000000000000000000000000000000000002625a0"
+                },
+                {
+                  "logIndex": 1,
+                  "address": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+                  "topics": [
+                    "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5",
+                    "0x6685129641dfc25020b133b6fb4a7e85a0b68d02cb4d5a7689955a905abe6567"
+                  ],
+                  "data": "0xe90d3ecc4cb9b14c81d2b0c726bae75711a33aa5e8797e62125c9d821f659842f176151caf63f43b8dd937107c82aa2e00c5bde1cc7fde0446e6fd3a388ff73f00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b400000000000000000000000000000000000000000000000000000000002625a0"
+                },
+                {
+                  "logIndex": 2,
+                  "address": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+                  "topics": [
+                    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                    "0x00000000000000000000000078d011cf18c42ea5f45552badb861745ffdcc2b1",
+                    "0x00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4"
+                  ],
+                  "data": "0x00000000000000000000000000000000000000000000000000000000002625a0"
+                }
+              ]
+            }
+          },
+          "blocks": {
+            "21000000": [
+              "0x41c51e1fb8e6ed06206be28951ac6b1f71a90df1788655799f357a03d61bcf4f"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
       "name": "governing-convention-hash-mismatch",
       "note": "The settlement recomputes cleanly, but the proof was scored under a different governing_convention_hash than the one this verifier scores winRate under. The outcome is unverifiable FOR THAT SCORE; it is not re-scored under the verifier's own convention.",
       "order": {
@@ -616,6 +753,7 @@
         "chainId": 8453,
         "txHash": "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69",
         "releaseLogIndex": 0,
+        "transferLogIndex": 1,
         "governing_convention_hash": "0x400001d0b573d369feda25e8776fdca9987e3c8448b813f4d36c7da8c277c6af"
       },
       "chain": {

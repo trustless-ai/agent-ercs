@@ -84,8 +84,10 @@ def chain_with(*receipts_, block_txs=None):
     return {str(CHAIN_ID): {"receipts": rs, "blocks": blocks}}
 
 
-def proof(tx=TX_GOOD, log_index=0, chain_id=CHAIN_ID, conv=WIN_RATE_CONVENTION):
+def proof(tx=TX_GOOD, log_index=0, chain_id=CHAIN_ID, conv=WIN_RATE_CONVENTION,
+          transfer_log_index=1):
     return {"chainId": chain_id, "txHash": tx, "releaseLogIndex": log_index,
+            "transferLogIndex": transfer_log_index,
             "governing_convention_hash": conv}
 
 
@@ -205,6 +207,31 @@ def build():
         "The chain is reachable but the receipt for txHash is not available (pruned history, "
         "unindexed tx). Same tri-state answer as an unreachable chain.",
         "unverifiable", proof(), chain_with(block_txs={str(BLOCK): [TX_GOOD]})))
+
+    tx_idx = h32("tx:release-transfer-index-mismatch")
+    v.append(vec(
+        "transfer-index-mismatch",
+        "The receipt carries both a release and a matching Transfer, but the proof names the "
+        "release's own logIndex as transferLogIndex. The proof must NAME the payment it relies on; "
+        "a checker that searches for any matching Transfer instead would accept this.",
+        "rejected", proof(tx=tx_idx, transfer_log_index=0),
+        chain_with(receipt(tx_idx, BLOCK, 1, [
+            released_log(0, ORDER_ID, PROVIDER, AMOUNT),
+            transfer_log(1, ESCROW, PROVIDER, AMOUNT)]))))
+
+    tx_batch = h32("tx:batch-two-releases-one-transfer")
+    v.append(vec(
+        "two-releases-one-transfer",
+        "A batch receipt releases TWO orders to the same provider for the same amount but carries "
+        "only ONE Transfer. Both proofs can name that same log, so naming alone is not enough: the "
+        "receipt must carry at least as many matching payments as matching releases, or one payment "
+        "mints two settled outcomes and two reputation increments (raised by Tiago/Echo).",
+        "rejected", proof(tx=tx_batch, log_index=1, transfer_log_index=2),
+        chain_with(receipt(tx_batch, BLOCK, 1, [
+            released_log(0, ORDER_ID, PROVIDER, AMOUNT),
+            released_log(1, OTHER_ORDER_ID, PROVIDER, AMOUNT),
+            transfer_log(2, ESCROW, PROVIDER, AMOUNT)])),
+        order=dict(ORDER, orderId=OTHER_ORDER_ID)))
 
     other_conv = h32("some-other-rounding-convention")
     v.append(vec(

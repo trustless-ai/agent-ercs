@@ -2,7 +2,7 @@
   "profile": "verify_outcome.v0",
   "vectors": {
     "path": "verify-outcome-v0.vectors.json",
-    "sha256": "d9205fdea1481fa4cef4c6fedf5be34d0fcd60203333a659a268c15e9fb59454"
+    "sha256": "9aa32cd373658c65d06b96a9f1a68146e690d3f2b24a2dd8e4b55f7a8d0f769d"
   },
   "adapter": {
     "kind": "stdio",
@@ -11,6 +11,6 @@
   "laneHint": "recomputable",
   "spec": {
     "path": "verify-outcome-v0.spec.md",
-    "sha256": "334dff6501e30e7a7ede30650a488f4ffb69b4ab85403a531c8a3bb5cada2830"
+    "sha256": "4cc5576abe08f5aa77a7c620e0e162387591b0b5cc7275fe8dafe40abd5d15ff"
   }
 }
