@@ -53,8 +53,13 @@ interface IAgentReputation is IClaimType {
     ///         consumer can confirm win/loss attribution without trusting this contract's own
     ///         `getReputation` aggregate.
     /// @param orderId Identifier of the settled order.
-    /// @param proof   Implementation-defined proof of the settled outcome (e.g. Merkle proof
-    ///                against a published settlement root, or a direct event-log reference).
-    /// @return valid True if the outcome resolves as claimed against public on-chain data.
+    /// @param proof   Proof of the settled outcome. Profile `verify_outcome.v0`
+    ///                (conformance/verify-outcome-v0) pins a chain-recomputable format: chainId,
+    ///                settlement tx, release-event log index and governing_convention_hash,
+    ///                checked against that tx's receipt only. Other formats (e.g. a Merkle proof
+    ///                against a published settlement root) remain implementation-defined.
+    /// @return valid True if the outcome resolves as claimed against public on-chain data. Under
+    ///               `verify_outcome.v0`, true only for `verified`; `unverifiable` (chain or
+    ///               receipt not reachable, or a different convention hash) is never true.
     function verifyOutcome(bytes32 orderId, bytes calldata proof) external view returns (bool valid);
 }

@@ -62,6 +62,22 @@ adversarial-inference half of this problem (can an implementation *infer* operat
 raw attestation timing/overlap when labels are withheld) is intentionally left open — Sarkar's
 own follow-on point, left for him to land in his own words rather than built on his behalf.
 
+## Outcome verification (`verifyOutcome`, Settlement -> Reputation)
+
+`verifyOutcome(orderId, proof)` is where a settlement becomes a reputation input. Profile
+`verify_outcome.v0` pins one proof format any verifier can recompute from the chain alone: the
+settlement tx receipt (status ok), the escrow's release event for this exact `orderId` at the
+proven log index, and the asset `Transfer` to the provider for the order amount in that same
+receipt, never the facilitator's report and never a scan of the block. Tri-state, fail-closed:
+`verified`, `rejected`, or `unverifiable` (chain unreachable, receipt not retrievable, or a proof
+scored under a different `governing_convention_hash`). Coverage: a score published without
+`settled_count` beside it is non-conformant.
+
+Suite: [`conformance/verify-outcome-v0/`](../../../conformance/verify-outcome-v0) -- 10 pinned
+vectors, a stdlib checker (`python3 check.py`), and 9 mutation controls (`--mutants`), each a lax
+verifier that must fail at least one vector. Gap raised by Petchevere (x402#3824), boundary
+framing by Pavlo, tri-state and coverage by Echo, semantics confirmed by Panini.
+
 ## Related ERCs
 
 - [ERC-8299](../../verify/ERC8299) — WYRIWE attestation fields this reputation layer optionally
