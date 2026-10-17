@@ -18,7 +18,7 @@ order being scored.
 
 ## Semantics
 
-A proof in this profile carries `chainId`, `txHash`, `releaseLogIndex` and
+A proof in this profile carries `chainId`, `txHash`, `releaseLogIndex`, `transferLogIndex` and
 `governing_convention_hash`. `chainId` compares by value: a JSON integer, a decimal string, or a
 `0x` hex string (as `eth_chainId` returns it) all name the same chain; anything else is rejected. The verifier recomputes everything from the chain, never from the
 presenter or the facilitator:
@@ -27,17 +27,24 @@ presenter or the facilitator:
 2. The log at `releaseLogIndex` in **that receipt** is the escrow's release event, emitted by the
    order's escrow, with `topics[1] == orderId`, and its payee and amount equal the order's
    provider and amount.
-3. **The same receipt** contains an asset `Transfer` from the escrow to the provider for the order
-   amount. Logs come from the proven receipt only, never from a scan of the block. The Transfer's
-   `data` is required and is exactly one 32-byte word; a missing field is not read as 0.
-4. `governing_convention_hash` equals the convention the verifier scores under
+3. The log at `transferLogIndex` in **that same receipt** is an asset `Transfer` from the escrow to
+   the provider for the order amount. The proof NAMES the payment it relies on; the verifier does
+   not search for any matching Transfer. Logs come from the proven receipt only, never from a scan
+   of the block. The Transfer's `data` is required and is exactly one 32-byte word; a missing field
+   is not read as 0.
+4. **One payment per release.** The receipt carries at least as many matching `Transfer` logs as it
+   does matching release events for this provider and amount. Naming a log is not sufficient on its
+   own: two releases in one batch receipt can name the *same* Transfer, and a verifier handling one
+   order at a time cannot see the other claim. Without this count a single payment settles N orders
+   and mints N reputation increments. A batch that pays each release separately still verifies.
+5. `governing_convention_hash` equals the convention the verifier scores under
    (`win_rate.bps.v0` = `0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf`).
 
 Three outcomes, fail-closed:
 
 | Outcome | When |
 |---|---|
-| `verified` | 1-4 hold |
+| `verified` | 1-5 hold |
 | `rejected` | no tx to recompute from, or any of 1-3 is contradicted by the chain |
 | `unverifiable` | the verifier cannot reach `chainId` or retrieve the receipt, or the proof was scored under a different convention hash |
 
@@ -97,6 +104,8 @@ as a decimal string (compared by value, not JSON type).
 | `transfer-in-other-tx-same-block` | rejected |
 | `transfer-missing-data` | rejected |
 | `chainid-as-decimal-string` | verified |
+| `transfer-index-mismatch` | rejected |
+| `two-releases-one-transfer` | rejected |
 | `chain-unreachable` | unverifiable |
 | `receipt-not-retrievable` | unverifiable |
 | `governing-convention-hash-mismatch` | unverifiable |
@@ -108,12 +117,13 @@ Each vector has a `chain` fixture standing in for `eth_getTransactionReceipt` pe
 
 ## Mutation controls
 
-`python3 check.py --mutants` runs 11 lax checkers, each dropping one rule. Every one must diverge
+`python3 check.py --mutants` runs 13 lax checkers, each dropping one rule. Every one must diverge
 from the pinned outcomes on at least one vector, or the suite has no bite:
 
 trust-facilitator-report, no-order-binding, no-amount-check, no-payee-check, ignore-status,
 scan-block-for-transfer, unverifiable-as-rejected, unverifiable-as-verified, ignore-convention-hash,
-transfer-data-defaults-zero, strict-chainid-type.
+transfer-data-defaults-zero, strict-chainid-type, transfer-not-bound-to-release,
+transfer-reused-across-releases.
 
 ## Non-goals
 

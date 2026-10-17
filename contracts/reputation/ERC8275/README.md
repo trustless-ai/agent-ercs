@@ -67,8 +67,11 @@ own follow-on point, left for him to land in his own words rather than built on 
 `verifyOutcome(orderId, proof)` is where a settlement becomes a reputation input. Profile
 `verify_outcome.v0` pins one proof format any verifier can recompute from the chain alone: the
 settlement tx receipt (status ok), the escrow's release event for this exact `orderId` at the
-proven log index, and the asset `Transfer` to the provider for the order amount in that same
-receipt, never the facilitator's report and never a scan of the block. Tri-state, fail-closed:
+proven log index, and the asset `Transfer` to the provider for the order amount at the log index
+the proof names in that same receipt, never the facilitator's report and never a scan of the block.
+The receipt must also carry at least as many matching `Transfer` logs as matching releases: two
+releases in one batch can name the same payment, and a verifier seeing one order at a time cannot
+see the other claim, so without that count one payment settles N orders. Tri-state, fail-closed:
 `verified`, `rejected`, or `unverifiable` (chain unreachable, receipt not retrievable, or a proof
 scored under a different `governing_convention_hash`). Coverage: a score published without
 `settled_count` beside it is non-conformant. The recompute is off-chain: an on-chain
@@ -76,8 +79,8 @@ scored under a different `governing_convention_hash`). Coverage: a score publish
 (receipt/state proof, Merkle proof against a settlement root, or a signed receipt digest), and its
 `bool` maps `rejected` and `unverifiable` both to `false`.
 
-Suite: [`conformance/verify-outcome-v0/`](../../../conformance/verify-outcome-v0) -- 12 pinned
-vectors, a stdlib checker (`python3 check.py`), and 11 mutation controls (`--mutants`), each a lax
+Suite: [`conformance/verify-outcome-v0/`](../../../conformance/verify-outcome-v0) -- 14 pinned
+vectors, a stdlib checker (`python3 check.py`), and 13 mutation controls (`--mutants`), each a lax
 verifier that must fail at least one vector. Gap raised by Petchevere (x402#3824), boundary
 framing by Pavlo, tri-state and coverage by Echo, semantics confirmed and first draft reviewed by Panini.
 

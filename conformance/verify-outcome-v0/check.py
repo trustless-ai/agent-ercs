@@ -41,6 +41,8 @@ MUTANTS = {
     "ignore-convention-hash": "does not compare governing_convention_hash",
     "transfer-data-defaults-zero": "reads a Transfer log with no data field as amount 0",
     "strict-chainid-type": "compares chainId by type as well as value (\"8453\" != 8453)",
+    "transfer-not-bound-to-release": "ignores transferLogIndex and searches for any matching Transfer",
+    "transfer-reused-across-releases": "lets one Transfer settle several releases in the same receipt",
 }
 
 
@@ -154,8 +156,31 @@ def verify(order, proof, chain, convention=WIN_RATE_CONVENTION, mutant=None):
             return int(l.get("data", "0x0"), 16) == want_amount
         return _word(l.get("data")) == want_amount  # data is required: exactly one word
 
-    if not any(transfer_ok(l) for l in pool):
-        return REJECTED, "no asset Transfer escrow -> provider for the order amount in this receipt"
+    # Rule 3a: the proof NAMES which Transfer pays this release. Searching for "any matching
+    # Transfer" would let a batch receipt reuse one payment for several releases.
+    if mutant in ("transfer-not-bound-to-release", "scan-block-for-transfer"):
+        named = next((l for l in pool if transfer_ok(l)), None)
+    else:
+        named = next((l for l in pool if l.get("logIndex") == proof.get("transferLogIndex")), None)
+        if named is not None and not transfer_ok(named):
+            named = None
+    if named is None:
+        return REJECTED, "transferLogIndex is not a matching asset Transfer escrow -> provider in this receipt"
+
+    # Rule 3b: one payment per release. Naming a log is not enough on its own — two releases in
+    # one receipt can name the SAME Transfer, so the receipt must carry at least as many matching
+    # payments as it does matching releases.
+    if mutant != "transfer-reused-across-releases":
+        n_releases = sum(
+            1 for l in rcpt.get("logs", [])
+            if _eq(l.get("address"), order["escrow"])
+            and (l.get("topics") or [None])[0] and _eq(l["topics"][0], RELEASED_TOPIC)
+            and len(_words(l.get("data", ""))) == 4
+            and _eq(_addr_from_word(_words(l["data"])[2]), order["provider"])
+            and int(_words(l["data"])[3], 16) == want_amount
+        )
+        if sum(1 for l in pool if transfer_ok(l)) < n_releases:
+            return REJECTED, "fewer matching Transfers than matching releases in this receipt"
 
     if mutant != "ignore-convention-hash" and not _eq(proof.get("governing_convention_hash"), convention):
         return UNVERIFIABLE, "proof scored under a different governing_convention_hash"
