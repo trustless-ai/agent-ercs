@@ -172,6 +172,28 @@ def build():
             receipt(tx_rel, BLOCK, 1, [released_log(0, ORDER_ID, PROVIDER, AMOUNT)]),
             receipt(tx_xfer, BLOCK, 1, [transfer_log(0, ESCROW, PROVIDER, AMOUNT)]))))
 
+    zero_order = dict(ORDER, amount="0")
+    tx_zero = h32("tx:release-zero-no-transfer-data")
+    nodata = transfer_log(1, ESCROW, PROVIDER, 0)
+    del nodata["data"]
+    v.append(vec(
+        "transfer-missing-data",
+        "A Transfer log escrow -> provider with no data field, against an order whose amount is 0. "
+        "The Transfer amount is required (exactly one 32-byte word); a checker that reads missing "
+        "data as 0 would bind a zero-amount order to a log that proves no amount (raised by Panini).",
+        "rejected", proof(tx=tx_zero),
+        chain_with(receipt(tx_zero, BLOCK, 1, [
+            released_log(0, ORDER_ID, PROVIDER, 0), nodata])),
+        order=zero_order))
+
+    v.append(vec(
+        "chainid-as-decimal-string",
+        "The same proof as the positive vector, with chainId carried as the string \"8453\" against "
+        "an order carrying the integer 8453. chainId compares by value after normalizing (JSON "
+        "integer, decimal string, or 0x hex as eth_chainId returns it), not by JSON type (raised by "
+        "Panini).",
+        "verified", dict(proof(), chainId=str(CHAIN_ID)), chain_with(GOOD_RECEIPT)))
+
     v.append(vec(
         "chain-unreachable",
         "Echo's tri-state case: the verifier has no view of chainId (wrong network, no RPC). The "

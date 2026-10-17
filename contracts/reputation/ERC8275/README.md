@@ -71,12 +71,15 @@ proven log index, and the asset `Transfer` to the provider for the order amount 
 receipt, never the facilitator's report and never a scan of the block. Tri-state, fail-closed:
 `verified`, `rejected`, or `unverifiable` (chain unreachable, receipt not retrievable, or a proof
 scored under a different `governing_convention_hash`). Coverage: a score published without
-`settled_count` beside it is non-conformant.
+`settled_count` beside it is non-conformant. The recompute is off-chain: an on-chain
+`verifyOutcome` cannot read a historical receipt, so it verifies a carrier of the recomputation
+(receipt/state proof, Merkle proof against a settlement root, or a signed receipt digest), and its
+`bool` maps `rejected` and `unverifiable` both to `false`.
 
-Suite: [`conformance/verify-outcome-v0/`](../../../conformance/verify-outcome-v0) -- 10 pinned
-vectors, a stdlib checker (`python3 check.py`), and 9 mutation controls (`--mutants`), each a lax
+Suite: [`conformance/verify-outcome-v0/`](../../../conformance/verify-outcome-v0) -- 12 pinned
+vectors, a stdlib checker (`python3 check.py`), and 11 mutation controls (`--mutants`), each a lax
 verifier that must fail at least one vector. Gap raised by Petchevere (x402#3824), boundary
-framing by Pavlo, tri-state and coverage by Echo, semantics confirmed by Panini.
+framing by Pavlo, tri-state and coverage by Echo, semantics confirmed and first draft reviewed by Panini.
 
 ## Related ERCs
 

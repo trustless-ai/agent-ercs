@@ -39,6 +39,8 @@ MUTANTS = {
     "unverifiable-as-rejected": "binary checker: anything it cannot check is rejected",
     "unverifiable-as-verified": "binary checker: anything it cannot check is accepted",
     "ignore-convention-hash": "does not compare governing_convention_hash",
+    "transfer-data-defaults-zero": "reads a Transfer log with no data field as amount 0",
+    "strict-chainid-type": "compares chainId by type as well as value (\"8453\" != 8453)",
 }
 
 
@@ -49,6 +51,32 @@ def _addr_from_word(word: str) -> str:
 def _words(data: str):
     d = data[2:] if data.startswith("0x") else data
     return ["0x" + d[i:i + 64] for i in range(0, len(d), 64)]
+
+
+def _chain_id(v):
+    """chainId as an int: a JSON integer, a decimal string, or a 0x hex string (as eth_chainId
+    returns it). Anything else (bool, float, other text) is None."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        return v if v > 0 else None
+    if isinstance(v, str):
+        try:
+            n = int(v, 16) if v[:2].lower() == "0x" and len(v) > 2 else int(v, 10) if v.isascii() and v.isdigit() else None
+        except ValueError:
+            return None
+        return n if n and n > 0 else None
+    return None
+
+
+def _word(data):
+    """One 32-byte ABI word as an int; None if data is missing or not exactly one word."""
+    if not isinstance(data, str) or not data.startswith("0x") or len(data) != 66:
+        return None
+    try:
+        return int(data, 16)
+    except ValueError:
+        return None
 
 
 def _eq(a, b) -> bool:
@@ -64,8 +92,12 @@ def verify(order, proof, chain, convention=WIN_RATE_CONVENTION, mutant=None):
             if rep.get("status") == "settled" and _eq(rep.get("orderId"), order["orderId"]):
                 return VERIFIED, "facilitator report trusted"
         return REJECTED, "no transaction to recompute from"
-    if proof.get("chainId") != order["chainId"]:
-        return REJECTED, "proof chainId differs from the order's"
+    if mutant == "strict-chainid-type":
+        if proof.get("chainId") != order["chainId"]:
+            return REJECTED, "proof chainId differs from the order's"
+    cid = _chain_id(order["chainId"])
+    if cid is None or _chain_id(proof.get("chainId")) != cid:
+        return REJECTED, "proof chainId missing, malformed, or different from the order's"
 
     def cannot_check(reason):
         if mutant == "unverifiable-as-rejected":
@@ -74,7 +106,7 @@ def verify(order, proof, chain, convention=WIN_RATE_CONVENTION, mutant=None):
             return VERIFIED, reason
         return UNVERIFIABLE, reason
 
-    view = chain.get(str(order["chainId"]))
+    view = chain.get(str(cid))
     if view is None:
         return cannot_check("chainId not reachable")
     rcpt = view.get("receipts", {}).get(tx)
@@ -116,7 +148,11 @@ def verify(order, proof, chain, convention=WIN_RATE_CONVENTION, mutant=None):
             return False
         if mutant != "no-payee-check" and not _eq(_addr_from_word(t[2]), order["provider"]):
             return False
-        return mutant == "no-amount-check" or int(l.get("data", "0x0"), 16) == want_amount
+        if mutant == "no-amount-check":
+            return True
+        if mutant == "transfer-data-defaults-zero":
+            return int(l.get("data", "0x0"), 16) == want_amount
+        return _word(l.get("data")) == want_amount  # data is required: exactly one word
 
     if not any(transfer_ok(l) for l in pool):
         return REJECTED, "no asset Transfer escrow -> provider for the order amount in this receipt"

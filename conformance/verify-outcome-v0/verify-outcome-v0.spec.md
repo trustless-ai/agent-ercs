@@ -19,7 +19,8 @@ order being scored.
 ## Semantics
 
 A proof in this profile carries `chainId`, `txHash`, `releaseLogIndex` and
-`governing_convention_hash`. The verifier recomputes everything from the chain, never from the
+`governing_convention_hash`. `chainId` compares by value: a JSON integer, a decimal string, or a
+`0x` hex string (as `eth_chainId` returns it) all name the same chain; anything else is rejected. The verifier recomputes everything from the chain, never from the
 presenter or the facilitator:
 
 1. The receipt for `txHash` on `chainId` exists and has `status == 1`.
@@ -27,7 +28,8 @@ presenter or the facilitator:
    order's escrow, with `topics[1] == orderId`, and its payee and amount equal the order's
    provider and amount.
 3. **The same receipt** contains an asset `Transfer` from the escrow to the provider for the order
-   amount. Logs come from the proven receipt only, never from a scan of the block.
+   amount. Logs come from the proven receipt only, never from a scan of the block. The Transfer's
+   `data` is required and is exactly one 32-byte word; a missing field is not read as 0.
 4. `governing_convention_hash` equals the convention the verifier scores under
    (`win_rate.bps.v0` = `0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf`).
 
@@ -46,6 +48,29 @@ convention hash is unverifiable **for that score**; it is not re-scored under th
 convention. For `bool verifyOutcome(...)`, `valid == true` iff the outcome is `verified`; an
 off-chain verifier that reports results MUST report `unverifiable` as its own state.
 
+## On-chain `verifyOutcome`: a carrier, not a recompute
+
+The recomputation above is done by an **off-chain** verifier: `check.py` stands in for
+`eth_getTransactionReceipt` on an RPC for `chainId`. The on-chain
+`verifyOutcome(bytes32 orderId, bytes calldata proof) external view` cannot do this itself: a view
+function has no access to a historical receipt, so it cannot fetch the release event or the
+Transfer by log index. "Recomputable from the chain alone" is therefore a property of what any
+off-chain verifier can check, not a claim that the contract recomputes it.
+
+An on-chain implementation that wants to answer `verifyOutcome` for this profile has to take a
+**carrier** of that recomputation in `proof` and verify the carrier, for example a receipt or state
+proof against a block hash the contract can trust, a Merkle proof against a published settlement
+root, or a signed digest of the recomputed receipt from a key the contract trusts. Each carrier
+adds its own trust assumption (the block hash source, the root publisher, the signer), which an
+implementation should state. The carrier format is implementation-defined; the receipt checks
+(rules 1-3) and the convention-hash rule (4) are what it must attest to.
+
+The on-chain `bool` collapses two of the three states: `verified` maps to `true`; `rejected` and
+`unverifiable` both map to `false`. That is correct for a gate (fail closed), but a `false` from
+the contract does not say whether the settlement was contradicted or simply could not be checked.
+Consumers that need the distinction use an off-chain verifier, which MUST keep `unverifiable` as
+its own state.
+
 ## Coverage clause
 
 A score published without `settled_count` beside it is non-conformant: without the count, "not
@@ -54,10 +79,12 @@ count starts.
 
 ## Vectors
 
-10 pinned vectors in `verify-outcome-v0.vectors.json`. The confirmed semantics list 6
+12 pinned vectors in `verify-outcome-v0.vectors.json`. The confirmed semantics list 6
 settlement-evidence cases plus the unverifiable case; "amount or payee mismatch" is split into
 two vectors, the unverifiable case into its two triggers, and the convention-hash rule gets its
-own vector, so each rule has exactly one vector that tests it.
+own vector, so each rule has exactly one vector that tests it. Two more come from Panini's review
+of the first draft: a Transfer with no `data` (required, never read as 0) and a `chainId` carried
+as a decimal string (compared by value, not JSON type).
 
 | Vector | Expected |
 |---|---|
@@ -68,6 +95,8 @@ own vector, so each rule has exactly one vector that tests it.
 | `payee-mismatch` | rejected |
 | `reverted-tx` | rejected |
 | `transfer-in-other-tx-same-block` | rejected |
+| `transfer-missing-data` | rejected |
+| `chainid-as-decimal-string` | verified |
 | `chain-unreachable` | unverifiable |
 | `receipt-not-retrievable` | unverifiable |
 | `governing-convention-hash-mismatch` | unverifiable |
@@ -79,11 +108,12 @@ Each vector has a `chain` fixture standing in for `eth_getTransactionReceipt` pe
 
 ## Mutation controls
 
-`python3 check.py --mutants` runs 9 lax checkers, each dropping one rule. Every one must diverge
+`python3 check.py --mutants` runs 11 lax checkers, each dropping one rule. Every one must diverge
 from the pinned outcomes on at least one vector, or the suite has no bite:
 
 trust-facilitator-report, no-order-binding, no-amount-check, no-payee-check, ignore-status,
-scan-block-for-transfer, unverifiable-as-rejected, unverifiable-as-verified, ignore-convention-hash.
+scan-block-for-transfer, unverifiable-as-rejected, unverifiable-as-verified, ignore-convention-hash,
+transfer-data-defaults-zero, strict-chainid-type.
 
 ## Non-goals
 
@@ -98,7 +128,7 @@ scan-block-for-transfer, unverifiable-as-rejected, unverifiable-as-verified, ign
 
 ## Files
 
-- `verify-outcome-v0.vectors.json` — the 10 vectors.
+- `verify-outcome-v0.vectors.json` — the 12 vectors.
 - `generate_vectors.py` — reproduces the vectors byte for byte (stdlib only).
 - `check.py` — stdlib checker: `python3 check.py` self-checks, `--mutants` runs the controls,
   `--grade` is the stdio adapter (fixture on stdin, `{name: {"outcome": ...}}` on stdout).

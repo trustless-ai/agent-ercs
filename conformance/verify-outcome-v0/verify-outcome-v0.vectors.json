@@ -434,6 +434,121 @@
       }
     },
     {
+      "name": "transfer-missing-data",
+      "note": "A Transfer log escrow -> provider with no data field, against an order whose amount is 0. The Transfer amount is required (exactly one 32-byte word); a checker that reads missing data as 0 would bind a zero-amount order to a log that proves no amount (raised by Panini).",
+      "order": {
+        "orderId": "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662",
+        "chainId": 8453,
+        "escrow": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+        "asset": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+        "provider": "0x37ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4",
+        "amount": "0"
+      },
+      "proof": {
+        "chainId": 8453,
+        "txHash": "0x6dcfe99b634cf9c59ecd2d2be1e296d845368c70f0c6b137fb056b3ebdd7c79b",
+        "releaseLogIndex": 0,
+        "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
+      },
+      "chain": {
+        "8453": {
+          "receipts": {
+            "0x6dcfe99b634cf9c59ecd2d2be1e296d845368c70f0c6b137fb056b3ebdd7c79b": {
+              "transactionHash": "0x6dcfe99b634cf9c59ecd2d2be1e296d845368c70f0c6b137fb056b3ebdd7c79b",
+              "blockNumber": 21000000,
+              "status": 1,
+              "logs": [
+                {
+                  "logIndex": 0,
+                  "address": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+                  "topics": [
+                    "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5",
+                    "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662"
+                  ],
+                  "data": "0x124e69ee8bf0e3962368d9cfc80937df3f2156ab0d4e420b71530d9319b62dd39bdba526f2d82e6295bb99e5d2a69a8bc0b71840eae637464a7564ced6be7b9a00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b40000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "logIndex": 1,
+                  "address": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+                  "topics": [
+                    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                    "0x00000000000000000000000078d011cf18c42ea5f45552badb861745ffdcc2b1",
+                    "0x00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4"
+                  ]
+                }
+              ]
+            }
+          },
+          "blocks": {
+            "21000000": [
+              "0x6dcfe99b634cf9c59ecd2d2be1e296d845368c70f0c6b137fb056b3ebdd7c79b"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "name": "chainid-as-decimal-string",
+      "note": "The same proof as the positive vector, with chainId carried as the string \"8453\" against an order carrying the integer 8453. chainId compares by value after normalizing (JSON integer, decimal string, or 0x hex as eth_chainId returns it), not by JSON type (raised by Panini).",
+      "order": {
+        "orderId": "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662",
+        "chainId": 8453,
+        "escrow": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+        "asset": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+        "provider": "0x37ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4",
+        "amount": "2500000"
+      },
+      "proof": {
+        "chainId": "8453",
+        "txHash": "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69",
+        "releaseLogIndex": 0,
+        "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
+      },
+      "chain": {
+        "8453": {
+          "receipts": {
+            "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69": {
+              "transactionHash": "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69",
+              "blockNumber": 21000000,
+              "status": 1,
+              "logs": [
+                {
+                  "logIndex": 0,
+                  "address": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+                  "topics": [
+                    "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5",
+                    "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662"
+                  ],
+                  "data": "0x124e69ee8bf0e3962368d9cfc80937df3f2156ab0d4e420b71530d9319b62dd39bdba526f2d82e6295bb99e5d2a69a8bc0b71840eae637464a7564ced6be7b9a00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b400000000000000000000000000000000000000000000000000000000002625a0"
+                },
+                {
+                  "logIndex": 1,
+                  "address": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+                  "topics": [
+                    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                    "0x00000000000000000000000078d011cf18c42ea5f45552badb861745ffdcc2b1",
+                    "0x00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4"
+                  ],
+                  "data": "0x00000000000000000000000000000000000000000000000000000000002625a0"
+                }
+              ]
+            }
+          },
+          "blocks": {
+            "21000000": [
+              "0x9bc6fcffa864cc96bdf4376cb8c31d715dd63120829103d77b6589326a2f4a69"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "outcome": "verified"
+      }
+    },
+    {
       "name": "chain-unreachable",
       "note": "Echo's tri-state case: the verifier has no view of chainId (wrong network, no RPC). The proof may be sound; nothing was checked, so it is neither accepted nor rejected.",
       "order": {
