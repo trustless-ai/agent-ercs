@@ -53,8 +53,21 @@ interface IAgentReputation is IClaimType {
     ///         consumer can confirm win/loss attribution without trusting this contract's own
     ///         `getReputation` aggregate.
     /// @param orderId Identifier of the settled order.
-    /// @param proof   Implementation-defined proof of the settled outcome (e.g. Merkle proof
-    ///                against a published settlement root, or a direct event-log reference).
-    /// @return valid True if the outcome resolves as claimed against public on-chain data.
+    /// @param proof   Proof of the settled outcome. Profile `verify_outcome.v0`
+    ///                (conformance/verify-outcome-v0) pins a chain-recomputable format: chainId,
+    ///                settlement tx, release-event log index, the log index of the Transfer that
+    ///                pays it, and governing_convention_hash, checked against that tx's receipt
+    ///                only. The proof names its payment, and the receipt must carry at least as
+    ///                many matching Transfers as matching releases, so one payment cannot settle
+    ///                several orders in a batch. Other formats (e.g. a Merkle proof
+    ///                against a published settlement root) remain implementation-defined.
+    ///                The v0 recompute is done by an off-chain verifier: a view function cannot
+    ///                read a historical receipt, so an on-chain implementation verifies a carrier
+    ///                of it (receipt/state proof, settlement-root Merkle proof, or a signed receipt
+    ///                digest) and states that carrier's trust assumption.
+    /// @return valid True if the outcome resolves as claimed against public on-chain data. Under
+    ///               `verify_outcome.v0`, true only for `verified`; `unverifiable` (chain or
+    ///               receipt not reachable, or a different convention hash) is never true, so
+    ///               false covers both `rejected` and `unverifiable`.
     function verifyOutcome(bytes32 orderId, bytes calldata proof) external view returns (bool valid);
 }

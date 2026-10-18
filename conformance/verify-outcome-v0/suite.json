@@ -1,0 +1,16 @@
+{
+  "profile": "verify_outcome.v0",
+  "vectors": {
+    "path": "verify-outcome-v0.vectors.json",
+    "sha256": "f1167ec62a2f8853a8e4c8e481f0c25c222e270669d980a325a61777b671a6ec"
+  },
+  "adapter": {
+    "kind": "stdio",
+    "cmd": "python3 check.py --grade"
+  },
+  "laneHint": "recomputable",
+  "spec": {
+    "path": "verify-outcome-v0.spec.md",
+    "sha256": "e712cf05b240d8b6020c7bff87ac2660496700d6b6b5004a4cba5619d4d9e833"
+  }
+}
