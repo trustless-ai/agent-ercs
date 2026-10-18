@@ -71,7 +71,8 @@ proven log index, and the asset `Transfer` to the provider for the order amount 
 the proof names in that same receipt, never the facilitator's report and never a scan of the block.
 The receipt must also carry at least as many matching `Transfer` logs as matching releases: two
 releases in one batch can name the same payment, and a verifier seeing one order at a time cannot
-see the other claim, so without that count one payment settles N orders. Tri-state, fail-closed:
+see the other claim, so without that count one payment settles N orders. This is payment
+coverage, not a unique release-to-Transfer assignment; v0 does not claim more. Tri-state, fail-closed:
 `verified`, `rejected`, or `unverifiable` (chain unreachable, receipt not retrievable, or a proof
 scored under a different `governing_convention_hash`). Coverage: a score published without
 `settled_count` beside it is non-conformant. The recompute is off-chain: an on-chain
@@ -79,7 +80,7 @@ scored under a different `governing_convention_hash`). Coverage: a score publish
 (receipt/state proof, Merkle proof against a settlement root, or a signed receipt digest), and its
 `bool` maps `rejected` and `unverifiable` both to `false`.
 
-Suite: [`conformance/verify-outcome-v0/`](../../../conformance/verify-outcome-v0) -- 14 pinned
+Suite: [`conformance/verify-outcome-v0/`](../../../conformance/verify-outcome-v0) -- 15 pinned
 vectors, a stdlib checker (`python3 check.py`), and 13 mutation controls (`--mutants`), each a lax
 verifier that must fail at least one vector. Gap raised by Petchevere (x402#3824), boundary
 framing by Pavlo, tri-state and coverage by Echo, semantics confirmed and first draft reviewed by Panini.

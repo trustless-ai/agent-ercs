@@ -167,9 +167,10 @@ def verify(order, proof, chain, convention=WIN_RATE_CONVENTION, mutant=None):
     if named is None:
         return REJECTED, "transferLogIndex is not a matching asset Transfer escrow -> provider in this receipt"
 
-    # Rule 3b: one payment per release. Naming a log is not enough on its own — two releases in
-    # one receipt can name the SAME Transfer, so the receipt must carry at least as many matching
-    # payments as it does matching releases.
+    # Rule 3b: payment coverage. Naming a log is not enough on its own — two releases in one
+    # receipt can name the SAME Transfer, so the receipt must carry at least as many matching
+    # payments as it does matching releases. Coverage only: this does not enforce a unique
+    # release -> Transfer assignment (see spec rule 4, Scope).
     if mutant != "transfer-reused-across-releases":
         n_releases = sum(
             1 for l in rcpt.get("logs", [])

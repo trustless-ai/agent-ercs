@@ -739,6 +739,84 @@
       }
     },
     {
+      "name": "two-releases-shared-transfer-covered",
+      "note": "Scope pin: a batch receipt releases TWO orders to the same provider for the same amount and carries TWO matching Transfers, but this proof names the same Transfer the other order's proof can also name. v0 rule 4 is payment coverage, not a unique release-to-Transfer assignment, so this verifies. A checker claiming unique attribution must not claim v0 for it (raised by Pavlo).",
+      "order": {
+        "orderId": "0x6685129641dfc25020b133b6fb4a7e85a0b68d02cb4d5a7689955a905abe6567",
+        "chainId": 8453,
+        "escrow": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+        "asset": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+        "provider": "0x37ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4",
+        "amount": "2500000"
+      },
+      "proof": {
+        "chainId": 8453,
+        "txHash": "0xd64811bf5512b78120623cabea0a5af7c0d6632917b6094efedfc7b2b76b558c",
+        "releaseLogIndex": 1,
+        "transferLogIndex": 2,
+        "governing_convention_hash": "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
+      },
+      "chain": {
+        "8453": {
+          "receipts": {
+            "0xd64811bf5512b78120623cabea0a5af7c0d6632917b6094efedfc7b2b76b558c": {
+              "transactionHash": "0xd64811bf5512b78120623cabea0a5af7c0d6632917b6094efedfc7b2b76b558c",
+              "blockNumber": 21000000,
+              "status": 1,
+              "logs": [
+                {
+                  "logIndex": 0,
+                  "address": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+                  "topics": [
+                    "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5",
+                    "0x2b9ba71042d6ee0cdf8e314a23433dd95cea7be5624f71227ba84a7e76e2d662"
+                  ],
+                  "data": "0x124e69ee8bf0e3962368d9cfc80937df3f2156ab0d4e420b71530d9319b62dd39bdba526f2d82e6295bb99e5d2a69a8bc0b71840eae637464a7564ced6be7b9a00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b400000000000000000000000000000000000000000000000000000000002625a0"
+                },
+                {
+                  "logIndex": 1,
+                  "address": "0x78d011cf18c42ea5f45552badb861745ffdcc2b1",
+                  "topics": [
+                    "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5",
+                    "0x6685129641dfc25020b133b6fb4a7e85a0b68d02cb4d5a7689955a905abe6567"
+                  ],
+                  "data": "0xe90d3ecc4cb9b14c81d2b0c726bae75711a33aa5e8797e62125c9d821f659842f176151caf63f43b8dd937107c82aa2e00c5bde1cc7fde0446e6fd3a388ff73f00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b400000000000000000000000000000000000000000000000000000000002625a0"
+                },
+                {
+                  "logIndex": 2,
+                  "address": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+                  "topics": [
+                    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                    "0x00000000000000000000000078d011cf18c42ea5f45552badb861745ffdcc2b1",
+                    "0x00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4"
+                  ],
+                  "data": "0x00000000000000000000000000000000000000000000000000000000002625a0"
+                },
+                {
+                  "logIndex": 3,
+                  "address": "0x13ce338225f7dc145b8cf7a5bf37b9e75c85cb80",
+                  "topics": [
+                    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                    "0x00000000000000000000000078d011cf18c42ea5f45552badb861745ffdcc2b1",
+                    "0x00000000000000000000000037ecede77e5578aaf3a2580bf2ac7dc53bdbf4b4"
+                  ],
+                  "data": "0x00000000000000000000000000000000000000000000000000000000002625a0"
+                }
+              ]
+            }
+          },
+          "blocks": {
+            "21000000": [
+              "0xd64811bf5512b78120623cabea0a5af7c0d6632917b6094efedfc7b2b76b558c"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "outcome": "verified"
+      }
+    },
+    {
       "name": "governing-convention-hash-mismatch",
       "note": "The settlement recomputes cleanly, but the proof was scored under a different governing_convention_hash than the one this verifier scores winRate under. The outcome is unverifiable FOR THAT SCORE; it is not re-scored under the verifier's own convention.",
       "order": {

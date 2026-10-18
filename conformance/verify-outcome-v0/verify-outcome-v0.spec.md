@@ -32,11 +32,17 @@ presenter or the facilitator:
    not search for any matching Transfer. Logs come from the proven receipt only, never from a scan
    of the block. The Transfer's `data` is required and is exactly one 32-byte word; a missing field
    is not read as 0.
-4. **One payment per release.** The receipt carries at least as many matching `Transfer` logs as it
+4. **Payment coverage.** The receipt carries at least as many matching `Transfer` logs as it
    does matching release events for this provider and amount. Naming a log is not sufficient on its
    own: two releases in one batch receipt can name the *same* Transfer, and a verifier handling one
    order at a time cannot see the other claim. Without this count a single payment settles N orders
    and mints N reputation increments. A batch that pays each release separately still verifies.
+   **Scope:** this is coverage (the receipt holds enough payments for its releases), not a unique
+   release-to-Transfer assignment. Two releases that each name the same Transfer, in a receipt that
+   carries a second matching Transfer, both verify (vector `two-releases-shared-transfer-covered`).
+   v0 does not claim more. A unique attribution rule needs its own version, mapping rule, negative
+   vectors and mutation controls; and a deterministic log-index assignment would make the mapping
+   unique without showing which payment caused which order (raised by Pavlo).
 5. `governing_convention_hash` equals the convention the verifier scores under
    (`win_rate.bps.v0` = `0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf`).
 

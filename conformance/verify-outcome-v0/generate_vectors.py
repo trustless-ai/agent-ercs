@@ -233,6 +233,22 @@ def build():
             transfer_log(2, ESCROW, PROVIDER, AMOUNT)])),
         order=dict(ORDER, orderId=OTHER_ORDER_ID)))
 
+    tx_cov = h32("tx:batch-two-releases-shared-transfer-covered")
+    v.append(vec(
+        "two-releases-shared-transfer-covered",
+        "Scope pin: a batch receipt releases TWO orders to the same provider for the same amount and "
+        "carries TWO matching Transfers, but this proof names the same Transfer the other order's "
+        "proof can also name. v0 rule 4 is payment coverage, not a unique release-to-Transfer "
+        "assignment, so this verifies. A checker claiming unique attribution must not claim v0 for "
+        "it (raised by Pavlo).",
+        "verified", proof(tx=tx_cov, log_index=1, transfer_log_index=2),
+        chain_with(receipt(tx_cov, BLOCK, 1, [
+            released_log(0, ORDER_ID, PROVIDER, AMOUNT),
+            released_log(1, OTHER_ORDER_ID, PROVIDER, AMOUNT),
+            transfer_log(2, ESCROW, PROVIDER, AMOUNT),
+            transfer_log(3, ESCROW, PROVIDER, AMOUNT)])),
+        order=dict(ORDER, orderId=OTHER_ORDER_ID)))
+
     other_conv = h32("some-other-rounding-convention")
     v.append(vec(
         "governing-convention-hash-mismatch",
