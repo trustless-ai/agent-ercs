@@ -37,6 +37,20 @@ Every `AgentTask` and `AgentReply` is linked via bidirectional hashes:
 
 Any party can traverse from `result().finalTaskHash` back to `run()` and verify every transition was gate-approved.
 
+### Idempotent replies (`operationId`)
+
+`AgentReply.operationId` identifies the logical operation behind the reply. It MUST be non-zero,
+opaque, assigned by the operation's originator before the first submission, and carried unchanged
+by the replier across retries; a uniformly random `bytes32` is RECOMMENDED. It MUST NOT be derived
+from reply content — content equality does not imply operation identity.
+
+`operationId` is the first field in the `replyHash` preimage, so two distinct logical replies stay
+distinguishable even when the output, replier, tasks and timestamp resolve to the same values. The
+contract scopes an `operationId` to `(workflowRunId, replier, operationId)`; retries under the same
+id resolve to one canonical `replyHash`. `getReplyHashByOperation(workflowRunId, replier, operationId)`
+returns that hash, or `bytes32(0)` when the binding is unknown. `onAgentReply` returns the canonical
+`replyHash` for the submitted operation.
+
 ## Confidential steps
 
 A workflow stage whose reply carries no plaintext output. The action and the policy stay hidden; the fact that the action cleared the policy stays verifiable. `IConfidentialStep.sol` defines that path by composing ERC-8301 with [ERC-8354](../../verify/ERC8354/README.md).
