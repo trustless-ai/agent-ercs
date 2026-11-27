@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""verify_outcome.v0 checker for ERC-8275 IAgentReputation.verifyOutcome(orderId, proof). Stdlib only.
+
+verify(order, proof, chain, convention) returns one of three outcomes and fails closed:
+  verified      the settlement recomputes from the chain alone and matches the order
+  rejected      chain evidence is absent or contradicts the order
+  unverifiable  the verifier could not look (chain unreachable, receipt not retrievable), or the
+                proof was scored under a different governing_convention_hash. Never collapsed
+                into verified or rejected.
+
+`chain` is the chain's answer keyed by chainId: {"receipts": {txHash: receipt}, "blocks": {...}}.
+A live adapter swaps it for eth_getTransactionReceipt on an RPC for that chainId.
+
+  python3 check.py               reference checker against the pinned vectors (exit 1 on any miss)
+  python3 check.py --mutants     every lax checker below must miss at least one vector
+  python3 check.py --mutant NAME run one lax checker (prints where it diverges)
+  python3 check.py --grade       adapter: fixture JSON on stdin -> {name: {"outcome": ...}} on stdout
+"""
+import json
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+VECTORS = os.path.join(HERE, "verify-outcome-v0.vectors.json")
+
+VERIFIED, REJECTED, UNVERIFIABLE = "verified", "rejected", "unverifiable"
+RELEASED_TOPIC = "0x663f64891c2ac78fab8caeb1048364c51e6946d12f34e3431f7ced91032c1eb5"
+TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+WIN_RATE_CONVENTION = "0x0501b75db8e9ef4ef67c74efcfbe2a200b0a7e5aea5ca62f778c91c119e68daf"
+
+# Lax checkers used as mutation controls. Each drops exactly one rule.
+MUTANTS = {
+    "trust-facilitator-report": "accepts a facilitator 'settled' report when no tx is given",
+    "no-order-binding": "does not check the release event's orderId topic",
+    "no-amount-check": "does not compare the paid amount with the order",
+    "no-payee-check": "does not compare the payee with the order's provider",
+    "ignore-status": "does not check receipt status",
+    "scan-block-for-transfer": "accepts a matching Transfer anywhere in the block",
+    "unverifiable-as-rejected": "binary checker: anything it cannot check is rejected",
+    "unverifiable-as-verified": "binary checker: anything it cannot check is accepted",
+    "ignore-convention-hash": "does not compare governing_convention_hash",
+    "transfer-data-defaults-zero": "reads a Transfer log with no data field as amount 0",
+    "strict-chainid-type": "compares chainId by type as well as value (\"8453\" != 8453)",
+    "transfer-not-bound-to-release": "ignores transferLogIndex and searches for any matching Transfer",
+    "transfer-reused-across-releases": "lets one Transfer settle several releases in the same receipt",
+}
+
+
+def _addr_from_word(word: str) -> str:
+    return "0x" + word[-40:].lower()
+
+
+def _words(data: str):
+    d = data[2:] if data.startswith("0x") else data
+    return ["0x" + d[i:i + 64] for i in range(0, len(d), 64)]
+
+
+def _chain_id(v):
+    """chainId as an int: a JSON integer, a decimal string, or a 0x hex string (as eth_chainId
+    returns it). Anything else (bool, float, other text) is None."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        return v if v > 0 else None
+    if isinstance(v, str):
+        try:
+            n = int(v, 16) if v[:2].lower() == "0x" and len(v) > 2 else int(v, 10) if v.isascii() and v.isdigit() else None
+        except ValueError:
+            return None
+        return n if n and n > 0 else None
+    return None
+
+
+def _word(data):
+    """One 32-byte ABI word as an int; None if data is missing or not exactly one word."""
+    if not isinstance(data, str) or not data.startswith("0x") or len(data) != 66:
+        return None
+    try:
+        return int(data, 16)
+    except ValueError:
+        return None
+
+
+def _eq(a, b) -> bool:
+    return isinstance(a, str) and isinstance(b, str) and a.lower() == b.lower()
+
+
+def verify(order, proof, chain, convention=WIN_RATE_CONVENTION, mutant=None):
+    """Returns (outcome, reason)."""
+    tx = proof.get("txHash")
+    if not tx:
+        if mutant == "trust-facilitator-report":
+            rep = proof.get("facilitatorReport") or {}
+            if rep.get("status") == "settled" and _eq(rep.get("orderId"), order["orderId"]):
+                return VERIFIED, "facilitator report trusted"
+        return REJECTED, "no transaction to recompute from"
+    if mutant == "strict-chainid-type":
+        if proof.get("chainId") != order["chainId"]:
+            return REJECTED, "proof chainId differs from the order's"
+    cid = _chain_id(order["chainId"])
+    if cid is None or _chain_id(proof.get("chainId")) != cid:
+        return REJECTED, "proof chainId missing, malformed, or different from the order's"
+
+    def cannot_check(reason):
+        if mutant == "unverifiable-as-rejected":
+            return REJECTED, reason
+        if mutant == "unverifiable-as-verified":
+            return VERIFIED, reason
+        return UNVERIFIABLE, reason
+
+    view = chain.get(str(cid))
+    if view is None:
+        return cannot_check("chainId not reachable")
+    rcpt = view.get("receipts", {}).get(tx)
+    if rcpt is None:
+        return cannot_check("receipt not retrievable")
+
+    if rcpt.get("status") != 1 and mutant != "ignore-status":
+        return REJECTED, "receipt status is not success"
+
+    # Logs come from this receipt only.
+    logs = list(rcpt.get("logs", []))
+    rel = next((l for l in logs if l.get("logIndex") == proof.get("releaseLogIndex")), None)
+    if rel is None or not _eq(rel.get("address"), order["escrow"]) or \
+            not rel.get("topics") or not _eq(rel["topics"][0], RELEASED_TOPIC):
+        return REJECTED, "no release event from the order's escrow at releaseLogIndex"
+    if mutant != "no-order-binding" and (len(rel["topics"]) < 2 or not _eq(rel["topics"][1], order["orderId"])):
+        return REJECTED, "release event is for a different orderId"
+    w = _words(rel.get("data", ""))
+    if len(w) != 4:
+        return REJECTED, "malformed release event data"
+    rel_payee, rel_amount = _addr_from_word(w[2]), int(w[3], 16)
+    want_amount = int(order["amount"])
+    if mutant != "no-payee-check" and not _eq(rel_payee, order["provider"]):
+        return REJECTED, "release payee is not the order's provider"
+    if mutant != "no-amount-check" and rel_amount != want_amount:
+        return REJECTED, "release amount differs from the order"
+
+    pool = logs
+    if mutant == "scan-block-for-transfer":
+        pool = []
+        for t in view.get("blocks", {}).get(str(rcpt.get("blockNumber")), []):
+            pool += view["receipts"].get(t, {}).get("logs", [])
+
+    def transfer_ok(l):
+        t = l.get("topics") or []
+        if len(t) != 3 or not _eq(t[0], TRANSFER_TOPIC) or not _eq(l.get("address"), order["asset"]):
+            return False
+        if not _eq(_addr_from_word(t[1]), order["escrow"]):
+            return False
+        if mutant != "no-payee-check" and not _eq(_addr_from_word(t[2]), order["provider"]):
+            return False
+        if mutant == "no-amount-check":
+            return True
+        if mutant == "transfer-data-defaults-zero":
+            return int(l.get("data", "0x0"), 16) == want_amount
+        return _word(l.get("data")) == want_amount  # data is required: exactly one word
+
+    # Rule 3a: the proof NAMES which Transfer pays this release. Searching for "any matching
+    # Transfer" would let a batch receipt reuse one payment for several releases.
+    if mutant in ("transfer-not-bound-to-release", "scan-block-for-transfer"):
+        named = next((l for l in pool if transfer_ok(l)), None)
+    else:
+        named = next((l for l in pool if l.get("logIndex") == proof.get("transferLogIndex")), None)
+        if named is not None and not transfer_ok(named):
+            named = None
+    if named is None:
+        return REJECTED, "transferLogIndex is not a matching asset Transfer escrow -> provider in this receipt"
+
+    # Rule 3b: payment coverage. Naming a log is not enough on its own — two releases in one
+    # receipt can name the SAME Transfer, so the receipt must carry at least as many matching
+    # payments as it does matching releases. Coverage only: this does not enforce a unique
+    # release -> Transfer assignment (see spec rule 4, Scope).
+    if mutant != "transfer-reused-across-releases":
+        n_releases = sum(
+            1 for l in rcpt.get("logs", [])
+            if _eq(l.get("address"), order["escrow"])
+            and (l.get("topics") or [None])[0] and _eq(l["topics"][0], RELEASED_TOPIC)
+            and len(_words(l.get("data", ""))) == 4
+            and _eq(_addr_from_word(_words(l["data"])[2]), order["provider"])
+            and int(_words(l["data"])[3], 16) == want_amount
+        )
+        if sum(1 for l in pool if transfer_ok(l)) < n_releases:
+            return REJECTED, "fewer matching Transfers than matching releases in this receipt"
+
+    if mutant != "ignore-convention-hash" and not _eq(proof.get("governing_convention_hash"), convention):
+        return UNVERIFIABLE, "proof scored under a different governing_convention_hash"
+    return VERIFIED, "settlement recomputed from the chain"
+
+
+def run(vectors, mutant=None, convention=WIN_RATE_CONVENTION):
+    return {v["name"]: verify(v["order"], v["proof"], v["chain"], convention, mutant) for v in vectors}
+
+
+def main(argv):
+    if "--grade" in argv:
+        fx = json.load(sys.stdin)
+        conv = fx.get("constants", {}).get("governingConventionHash", WIN_RATE_CONVENTION)
+        print(json.dumps({n: {"outcome": o} for n, (o, _) in run(fx["vectors"], convention=conv).items()}))
+        return 0
+    with open(VECTORS) as f:
+        fx = json.load(f)
+    vectors = fx["vectors"]
+    want = {v["name"]: v["expected"]["outcome"] for v in vectors}
+
+    if "--mutants" in argv:
+        survivors = 0
+        for m, desc in MUTANTS.items():
+            got = run(vectors, m)
+            missed = [n for n in want if got[n][0] != want[n]]
+            if not missed:
+                survivors += 1
+            print(f"{'caught  ' if missed else 'SURVIVED'} {m:26} ({desc}) -> diverges on {', '.join(missed) or 'nothing'}")
+        print(f"{len(MUTANTS) - survivors}/{len(MUTANTS)} lax checkers caught")
+        return 1 if survivors else 0
+
+    mutant = None
+    if "--mutant" in argv:
+        mutant = argv[argv.index("--mutant") + 1]
+        if mutant not in MUTANTS:
+            print(f"unknown mutant; one of: {', '.join(MUTANTS)}")
+            return 2
+    got = run(vectors, mutant)
+    fails = 0
+    for n, (o, reason) in got.items():
+        ok = o == want[n]
+        fails += not ok
+        print(f"{'ok ' if ok else 'BAD'} {n:36} {o:13} {reason}")
+    print(f"{len(got) - fails}/{len(got)} reproduced" + (f" (mutant {mutant}: a miss is expected)" if mutant else ""))
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
