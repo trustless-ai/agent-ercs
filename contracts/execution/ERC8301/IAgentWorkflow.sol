@@ -40,10 +40,11 @@ struct AgentTask {
 
 /// @notice Reply submitted by an agent in response to a dispatched task.
 /// @dev    replyHash = keccak256(abi.encode(
-///             reply.outputHash, reply.timestamp, reply.replier,
+///             reply.operationId, reply.outputHash, reply.timestamp, reply.replier,
 ///             keccak256(abi.encodePacked(reply.prevTaskHashes)),
 ///             reply.workflowRunId))
 struct AgentReply {
+    bytes32   operationId;      // Opaque logical operation identifier; stable across retries
     bytes32   outputHash;       // keccak256(output)
     bytes     output;           // Reply output plaintext; MAY be empty
     uint256   timestamp;        // Off-chain execution time (Unix)
@@ -96,11 +97,21 @@ interface IAgentWorkflow {
             bytes32           verificationDigest
         );
 
+    /// @notice Resolve a logical reply operation to its canonical replyHash.
+    /// @return replyHash The first anchored replyHash; bytes32(0) if unknown
+    function getReplyHashByOperation(
+        bytes32 workflowRunId,
+        address replier,
+        bytes32 operationId
+    ) external view returns (bytes32 replyHash);
+
     // ── Agent Callbacks ──────────────────────────────────────────────────────
 
     /// @notice Agent submits a reply to a dispatched task.
     /// @param  reply  See AgentReply; reply.replier MUST equal msg.sender
-    function onAgentReply(AgentReply calldata reply) external;
+    /// @return replyHash The canonical replyHash for this logical operation
+    function onAgentReply(AgentReply calldata reply)
+        external returns (bytes32 replyHash);
 
     /// @notice Submit a cryptographic proof covering one or more anchored replies.
     /// @param  replyHashes Each MUST have been anchored by onAgentReply
